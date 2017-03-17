@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.10.6";
+	$.betterEditableData.version = "0.10.7";
 
 	// default functions definitions:
 	$.betterEditableData.default = {
@@ -78,9 +78,9 @@
 				}
 
 				if (makeErrorElem) {
-					var $errorElement = $("<label></label>").addClass('field-validation-error').attr('data-for', elementId).attr('data-valmsg-for', elementId).text(errorMsg);
+					var $errorElement = $("<span></span>").addClass(editable.options.errorClass).addClass('editable-error').attr('data-for', elementId).attr('data-valmsg-for', elementId).text(errorMsg);
 					if (editable.options.type != 'bool') {
-						editable.$inputDiv.find('.editable-input-wrapper').after($errorElement);
+						editable.$inputDiv.find('.editable-input-wrapper').append($errorElement);
 					} else {
 						editable.$inputDiv.after($errorElement);
 					}
@@ -465,6 +465,7 @@
 		this.options.buttonsOn = setIfDefined([this.$element.data('buttons-on'), settings.buttonsOn, true]);
 		this.options.inputClass = setIfDefined([this.$element.data('input-class'), settings.inputClass]);
 		this.options.buttonClass = setIfDefined([this.$element.data('button-class'), settings.buttonClass]);
+		this.options.errorClass = setIfDefined([this.$element.data('error-class'), settings.errorClass]);
 		this.options.tabIndex = setIfDefined([this.$element.data('tab-index'), settings.tabIndex]);
 		this.options.tabbingOn = setIfDefined([this.$element.data('tabbing-on'), settings.tabbingOn, false]);
 
@@ -628,7 +629,21 @@
 		this.$inputDiv.hide();
 		this.$element.after(this.$inputDiv);
 		this.$inputDiv.append($inputWrapper);
-		$inputWrapper.append(this.$input);
+
+		// create clear button to clear the input value, if enabled and correct type
+		if (inputType != 'select' && inputType != 'datetimepicker' && this.options.clearButton === true) {
+			var $clearButton = $("<span></span>").addClass('editable-clear-button').text('✖');
+			$clearButton.on('click', function () {
+				self.$input.val('');
+				self.$input.focus();
+			});
+			$clearWrapper = $('<div></div>').addClass('editable-clear-wrapper');
+			$clearWrapper.append(this.$input);
+			$clearWrapper.append($clearButton);
+			$inputWrapper.append($clearWrapper);
+		} else {
+			$inputWrapper.append(this.$input);
+		}
 		if (inputType == 'datetimepicker') {
 			var dateTimeSettings = $.extend({}, this.options.typeSettings);
 			// debug is set to true, to make the picker not hide on blur
@@ -648,16 +663,6 @@
 				});
 			}
 			this.$input.datetimepicker(dateTimeSettings);
-		}
-
-		// create clear button to clear the input value, if enabled and correct type
-		if (inputType != 'select' && inputType != 'datetimepicker' && this.options.clearButton === true) {
-			var clearButton = $("<span></span>").addClass('editable-clear-button').text('✖');
-			clearButton.on('click', function () {
-				self.$input.val('');
-				self.$input.focus();
-			});
-			$inputWrapper.append(clearButton);
 		}
 		// create submit and cancel buttons, if enabled
 		if (this.options.buttonsOn === true) {

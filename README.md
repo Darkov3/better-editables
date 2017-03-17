@@ -1,13 +1,13 @@
-# better-editables
-Highly customizable Java Script Editables
+# Better Editables
+Highly Customizable JavaScript Editables
+
 
 
 TODO:
 
 Bug Fixes:
 - clicking on autocomplete list will not prevent the on blur event from submitting the editable
-- error label moves the buttons in inline mode
+- datetimepicker type shows incorrect value on error in input field
 
 Features:
-- add custom class for error label
 - add option to create custom types

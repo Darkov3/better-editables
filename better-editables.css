@@ -14,6 +14,11 @@
 	font-style: italic;
 }
 
+.editable-error {
+	color: #e80c4d;
+	display: block;
+}
+
 .editable-input-div {
 	display: inline-block;
 	position: relative;
@@ -102,7 +107,12 @@
 .editable-input-wrapper {
 	display: inline-block;
 	position: relative;
-    float: left;
+	float: left;
+}
+
+.editable-clear-wrapper {
+	display: inline-block;
+	position: relative;
 }
 
 .editable-clear-button {
@@ -141,8 +151,8 @@
 
 	.editable-input-div.popup .editable-button-wrapper {
 		float: left;
-	    display: block;
-	    width: 100%;
+		display: block;
+		width: 100%;
 	}
 
 	.editable-input-div.inline.select .editable-button-wrapper,
