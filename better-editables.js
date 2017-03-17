@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.10.5";
+	$.betterEditableData.version = "0.10.6";
 
 	// default functions definitions:
 	$.betterEditableData.default = {
@@ -1072,9 +1072,9 @@
 // Main controllers scope
 {
 	$.fn.betterEditable = function (settings) {
-		if (typeof settings === 'undefined' || typeof settings === 'object' || typeof settings === null) {
-			if (typeof this.data('betterEditable') === 'undefined') {
-				if (typeof settings !== 'object' || typeof settings === null) {
+		if (typeof settings !== 'string') {
+			if (typeof this.data('betterEditable') !== 'object') {
+				if (typeof settings !== 'object' || settings === null) {
 					settings = {};
 				}
 				settings.$element = this;
@@ -1082,9 +1082,9 @@
 			}
 
 			return this.data('betterEditable');
-		} else if (typeof settings === 'string') {
+		} else {
 			var method = settings;
-			if (typeof this.data('betterEditable') !== 'undefined' && typeof $.betterEditableData.methods[method] === 'function') {
+			if (typeof this.data('betterEditable') === 'object' && typeof $.betterEditableData.methods[method] === 'function') {
 				var methodArguments = [].slice.call(arguments);
 				methodArguments.shift();
 				methodArguments.unshift(this.data('betterEditable'));
