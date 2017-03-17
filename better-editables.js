@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.10.9";
+	$.betterEditableData.version = "0.11.0";
 
 	// default functions definitions:
 	$.betterEditableData.default = {
@@ -498,9 +498,7 @@
 			}
 		});
 		this.$element.addClass('editable-ready');
-		this.$element.trigger("init", {
-			editable: self
-		});
+		this.$element.trigger("init", this);
 	}
 
 	BetterEditable.prototype.initializeValidators = function () {
@@ -696,10 +694,8 @@
 			this.$inputDiv.show();
 			this.$input.focus();
 		}
-		var self = this;
-		this.$element.trigger("recreateInput", {
-			editable: self
-		});
+
+		this.$element.trigger("recreateInput", this);
 	};
 }
 
@@ -755,9 +751,7 @@
 		}
 		this.$input.focus();
 
-		this.$element.trigger("shown", {
-			editable: self
-		});
+		this.$element.trigger("shown", this);
 	};
 
 	BetterEditable.prototype.hideInput = function () {
@@ -769,9 +763,7 @@
 			this.togglePopupOpen(false);
 		}
 
-		this.$element.trigger("hidden", {
-			editable: this
-		});
+		this.$element.trigger("hidden", this);
 	};
 
 	BetterEditable.prototype.initiateSubmit = function (newValue) {
@@ -798,9 +790,7 @@
 		this.options.errorHandler('', this, false);
 		this.hideInput();
 
-		this.$element.trigger("cancelled", {
-			editable: self
-		});
+		this.$element.trigger("cancelled", this);
 	};
 
 	BetterEditable.prototype.triggerTabbing = function (tabDirection) {
