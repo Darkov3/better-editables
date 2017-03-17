@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.10.7";
+	$.betterEditableData.version = "0.10.8";
 
 	// default functions definitions:
 	$.betterEditableData.default = {
@@ -354,7 +354,7 @@
 				editable.initiateSubmit();
 			}
 		},
-		createValidator(editable, validatorName, validatorFunction, messageFunction) {
+		createValidator: function(editable, validatorName, validatorFunction, messageFunction) {
 			if ($.betterEditableData.validators[validatorName] !== 'undefined') {
 				throw "This validator already exists!";
 			}
@@ -363,7 +363,7 @@
 				validator: validatorFunction
 			}
 		},
-		attachValidator(editable, validatorName, validatorValue) {
+		attachValidator: function(editable, validatorName, validatorValue) {
 			if ($.betterEditableData.validators[validatorName] === 'undefined') {
 				throw "This validator does not exist!";
 			}
@@ -381,7 +381,7 @@
 				editable.$element.data(validatorName, validatorValue);
 			}
 		},
-		detachValidator(editable, validatorName) {
+		detachValidator: function(editable, validatorName) {
 			for (var index = 0; index < editable.validators.length; ++index) {
 				if (editable.validators[index] == validatorName) {
 					editable.validators.splice(index, 1);
