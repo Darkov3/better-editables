@@ -135,15 +135,23 @@
 .editable-button-wrapper {
 	display: inline-block;
 	position: relative;
-	top: 1px;
+	top: 3px;
 	float: right;
 }
 
 	.editable-input-div.popup .editable-button-wrapper {
 		float: left;
+	    display: block;
+	    width: 100%;
+	}
+
+	.editable-input-div.inline.select .editable-button-wrapper,
+	.editable-input-div.popup.textarea .editable-button-wrapper {
+		top: 0;
 	}
 
 .editable-button {
+	font-size: 15px;
 	width: 18px;
 	height: 18px;
 	display: inline-block;
@@ -163,6 +171,10 @@
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
 	margin-left: 5px;
 }
+
+	.editable-input-div.popup .editable-button-wrapper .editable-button:first-of-type {
+		margin-left: 0;
+	}
 
 .editable-autocomplete-list.editable-autocomplete-popup {
 	z-index: 1000;
