@@ -11,3 +11,7 @@ Bug Fixes:
 
 Features:
 - add option to create custom types
+- add function to apply option on all editables at once
+- add demo page
+- add documentation
+- add more comments

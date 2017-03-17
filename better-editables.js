@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.10.8";
+	$.betterEditableData.version = "0.10.9";
 
 	// default functions definitions:
 	$.betterEditableData.default = {
@@ -770,7 +770,7 @@
 		}
 
 		this.$element.trigger("hidden", {
-			editable: self
+			editable: this
 		});
 	};
 
