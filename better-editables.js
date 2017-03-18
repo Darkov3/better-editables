@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.11.1";
+	$.betterEditableData.version = "0.11.2";
 
 	// default functions definitions:
 	$.betterEditableData.default = {
@@ -579,13 +579,15 @@
 		// submit on focusing outside the editable, unless its set to false or its a bool
 		if (this.options.type != 'bool' && this.options.submitOnBlur !== false) {
 			$(document).on('click', function () {
-				if (self.state.readOnly === false && self.isShown()) {
+				if (self.options.submitOnBlur === true && self.state.readOnly === false && self.isShown()) {
 					self.initiateSubmit();
 				}
 			});
 			// do not submit when clicking inside the div
 			this.$inputDiv.on('click', function (event) {
-				event.stopPropagation();
+				if (self.options.submitOnBlur === true && self.state.readOnly === false && self.isShown()) {
+					event.stopPropagation();
+				}
 			});
 		}
 
@@ -687,15 +689,11 @@
 	};
 
 	BetterEditable.prototype.recreateInputField = function () {
-		var visible = this.isShown();
-		var currentValue = this.getInputValue();
+		if (this.isShown()) {
+			this.hideInput();
+		}
 		this.$inputDiv.remove();
 		this.createInputField();
-		if (visible) {
-			this.setInputValue(currentValue);
-			this.$inputDiv.show();
-			this.$input.focus();
-		}
 
 		this.$element.trigger("recreateInput", this);
 	};
