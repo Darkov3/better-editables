@@ -1,6 +1,8 @@
 # Better Editables
 Highly Customizable JavaScript Editables
 
+Demo:
+https://darkov3.github.io/
 
 
 TODO:
@@ -18,7 +20,6 @@ Improvements:
 Features:
 - add option to create custom types
 - add function to apply option on all editables at once
-- add demo page
 - add documentation
 - add more comments
 - create getValue and setValue functions
