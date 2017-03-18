@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.11.0";
+	$.betterEditableData.version = "0.11.1";
 
 	// default functions definitions:
 	$.betterEditableData.default = {
@@ -19,7 +19,7 @@
 				}
 			}
 			editable.$element.html(value);
-			if (value.toString().trim() === '') {
+			if (typeof value === 'undefined' || value === null || value.toString().trim() === '') {
 				editable.$element.html(editable.options.emptyDisplay);
 				if (!editable.$element.hasClass('empty')) {
 					editable.$element.addClass('empty');
@@ -291,7 +291,9 @@
 				editable.$element.attr('data-tab-index', editable.options.tabIndex);
 			} else if (optionName == 'submitOnBlur' || optionName == 'clearButton' || optionName == 'buttonsOn' ||
 				optionName == 'inputClass' || optionName == 'buttonClass' || optionName == 'type' || optionName == 'mode') {
-				editable.recreateInputField();
+				if (editable.options.type != 'bool' || optionName == 'type') {
+					editable.recreateInputField();
+				}
 			}
 		},
 		getOption: function (editable, optionName) {
@@ -1104,7 +1106,9 @@
 			if ($.betterEditableData.submitting > 0 && $.betterEditableData.blockTab === false) {
 				event.preventDefault();
 			} else if (!event.shiftKey && $.betterEditableData.submitting === 0 &&
-				$('[data-editable-div]:visible').length == 0 && $('[data-editable-first-tab]:visible').length > 0) {
+				$('[data-editable-div]:visible').length == 0 && $('[data-editable-first-tab]:visible').length > 0 &&
+				typeof $('[data-editable-first-tab]:visible').first().betterEditable() === 'object' && $('[data-editable-first-tab]:visible').first().betterEditable() !== null &&
+				$('[data-editable-first-tab]:visible').first().betterEditable().options.tabbingOn == true) {
 				event.preventDefault();
 				$('[data-editable-first-tab]:visible').first().betterEditable().show();
 			}
