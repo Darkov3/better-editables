@@ -1,7 +1,53 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.12.59";
+	$.betterEditableData.version = "0.12.62";
+
+	// utility functions
+	$.betterEditableData.utils = {
+		// for IE compatibility
+		stopPropagation: function (event) {
+			if(event.stopPropagation) {
+				event.stopPropagation();
+			} else {
+				event.returnValue = false;
+			}
+		},
+		// for IE compatibility
+		preventDefault: function (event) {
+			if(event.preventDefault) {
+				event.preventDefault();
+			} else {
+				event.returnValue = false;
+			}
+		},
+		// for IE compatibility
+		getIEVersion: function () {
+			var userAgent = window.navigator.userAgent;
+
+			var msie = userAgent.indexOf('MSIE ');
+			if (msie > -1) {
+				// IE 10 or older => return version number
+				return parseInt(userAgent.substring(msie + 5, userAgent.indexOf('.', msie)), 10);
+			}
+
+			var trident = userAgent.indexOf('Trident/');
+			if (trident > -1) {
+				// IE 11 => return version number
+				var rv = userAgent.indexOf('rv:');
+				return parseInt(userAgent.substring(rv + 3, userAgent.indexOf('.', rv)), 10);
+			}
+
+			var edge = userAgent.indexOf('Edge/');
+			if (edge > -1) {
+				// Edge (IE 12+) => return version number
+				return parseInt(userAgent.substring(edge + 5, userAgent.indexOf('.', edge)), 10);
+			}
+
+			// other browser
+			return 0;
+		}
+	};
 
 	// default functions definitions:
 	$.betterEditableData.default = {
@@ -491,7 +537,7 @@
 
 		var self = this;
 		this.$element.on('click', function () {
-			event.stopPropagation();
+			$.betterEditableData.utils.stopPropagation(event);
 			self.show();
 
 			// if bool, trigger input click
@@ -585,9 +631,25 @@
 				if (self.options.submitOnBlur === true && self.state.readOnly === false && self.isShown()) {
 					// do not submit, if an autocomplete element is clicked
 					if (self.options.type == 'autocomplete') {
-						for (var index = 0; index < event.path.length; ++index) {
-							if ($(event.path[index]).hasClass('ui-autocomplete')) {
-								return;
+						if (typeof event.path !== 'undefined') {
+							for (var index = 0; index < event.path.length; ++index) {
+								if ($(event.path[index]).hasClass('ui-autocomplete')) {
+									return;
+								}
+							}
+						} else {
+							// for IE compatibility
+							for (var key in event.target.parentNode) {
+								if (event.target.parentNode.hasOwnProperty(key)) {
+									var innerObj = event.target.parentNode[key];
+									for (var innerKey in innerObj) {
+										if (innerObj.hasOwnProperty(innerKey)) {
+											if (innerKey == 'uiAutocompleteItem') {
+												return;
+											}
+										}
+									}
+								}
 							}
 						}
 					}
@@ -597,7 +659,7 @@
 			// do not submit when clicking inside the div
 			this.$inputDiv.on('click', function (event) {
 				if (self.options.submitOnBlur === true && self.state.readOnly === false && self.isShown()) {
-					event.stopPropagation();
+					$.betterEditableData.utils.stopPropagation(event);
 				}
 			});
 		}
@@ -612,10 +674,10 @@
 		} else {
 			this.$input.on('keydown', function (event) {
 				if (event.which == 27) { // escape pressed => do cancel
-					event.preventDefault();
+					$.betterEditableData.utils.preventDefault(event);
 					self.cancel();
 				} else if (event.which == 13 && self.options.type != 'textarea') { // enter pressed and type is not textarea => initiate submit
-					event.preventDefault();
+					$.betterEditableData.utils.preventDefault(event);
 					if (self.options.tabbingOn) { // trigger tabbing, if enabled
 						if (event.shiftKey) {
 							self.state.doTab = -1;
@@ -625,7 +687,7 @@
 					}
 					self.initiateSubmit();
 				} else if (self.options.tabbingOn === true && event.which == 9) { // tab pressed => trigger tabbing and submit, if enabled
-					event.preventDefault();
+					$.betterEditableData.utils.preventDefault(event);
 					if (event.shiftKey) {
 						self.state.doTab = -1;
 					} else {
@@ -640,8 +702,9 @@
 		this.$element.after(this.$inputDiv);
 		this.$inputDiv.append($inputWrapper);
 
-		// create clear button to clear the input value, if enabled and correct type
-		if (inputType != 'select' && inputType != 'datetimepicker' && this.options.clearButton === true) {
+		// create clear button to clear the input value, if enabled and correct type and its not IE: IE has its own clear button
+		if (inputType != 'select' && inputType != 'datetimepicker' && this.options.clearButton === true && 
+			$.betterEditableData.utils.getIEVersion() === 0) {
 			var $clearButton = $("<span></span>").addClass('editable-clear-button').text('✖');
 			$clearButton.on('click', function () {
 				self.$input.val('');
@@ -741,42 +804,56 @@
 		if (this.state.isValid) {
 			this.options.errorHandler('', this, false);
 		}
-		if (this.options.mode !== 'popup') {
-			this.$element.hide();
-		}
-		this.setInputValue();
-		this.$inputDiv.show();
-		if (this.options.mode === 'popup') {
-			// move the popup so it doesn't appear on top of the editable element.
-			this.togglePopupOpen(true);
-			if (this.options.placement === 'bottom') {
-				this.$inputDiv.css('top', (this.$element.outerHeight() + 7) + 'px');
-			} else if (this.options.placement === 'top') {
-				var heightOffset = this.$element.outerHeight();
-				if (this.$inputDiv.children().first().outerHeight() > heightOffset) {
-					heightOffset = this.$inputDiv.children().first().outerHeight();
+		var afterShow = function(editable) {
+			editable.setInputValue();
+			editable.$inputDiv.show();
+			if (editable.options.mode === 'popup') {
+				// move the popup so it doesn't appear on top of the editable element.
+				editable.togglePopupOpen(true);
+				if (editable.options.placement === 'bottom') {
+					editable.$inputDiv.css('top', (editable.$element.outerHeight() + 7) + 'px');
+				} else if (editable.options.placement === 'top') {
+					var heightOffset = editable.$element.outerHeight();
+					if (editable.$inputDiv.children().first().outerHeight() > heightOffset) {
+						heightOffset = editable.$inputDiv.children().first().outerHeight();
+					}
+					editable.$inputDiv.css('top', '-' + (heightOffset + 8) + 'px');
+				} else if (editable.options.placement === 'right') {
+					editable.$inputDiv.css('right', '-' + (editable.$element.outerWidth() + 7) + 'px');
+					editable.$inputDiv.css('top', '-' + 6 + 'px');
+				} else if (editable.options.placement === 'left') {
+					var widthOffset = editable.$element.outerWidth();
+					if (editable.$inputDiv.children().first().outerWidth() > widthOffset) {
+						widthOffset = editable.$inputDiv.children().first().outerWidth();
+					}
+					editable.$inputDiv.css('right', (widthOffset + 7) + 'px');
+					editable.$inputDiv.css('top', '-' + 6 + 'px');
 				}
-				this.$inputDiv.css('top', '-' + (heightOffset + 8) + 'px');
-			} else if (this.options.placement === 'right') {
-				this.$inputDiv.css('right', '-' + (this.$element.outerWidth() + 7) + 'px');
-				this.$inputDiv.css('top', '-' + 6 + 'px');
-			} else if (this.options.placement === 'left') {
-				var widthOffset = this.$element.outerWidth();
-				if (this.$inputDiv.children().first().outerWidth() > widthOffset) {
-					widthOffset = this.$inputDiv.children().first().outerWidth();
-				}
-				this.$inputDiv.css('right', (widthOffset + 7) + 'px');
-				this.$inputDiv.css('top', '-' + 6 + 'px');
 			}
-		}
-		this.$input.focus();
+			editable.$input.focus();
 
-		this.$element.trigger("be.shown", this);
+			editable.$element.trigger("be.shown", editable);
+		};
+		if (this.options.mode !== 'popup') {
+			var self = this;
+			// using when/then for IE compatibility
+			++$.betterEditableData.submitting;
+			$.when(this.$element.hide()).then(function(){
+				self.$inputDiv.show();
+				--$.betterEditableData.submitting;
+				afterShow(self);
+			});
+		} else {
+			afterShow(this);
+		}
 	};
 
 	BetterEditable.prototype.hideInput = function () {
-		this.$inputDiv.hide();
-		this.$element.show();
+		var self = this;
+		// using when/then for IE compatibility
+		$.when(this.$inputDiv.hide()).then(function(){
+			self.$element.show();
+		});
 
 		if (this.options.mode === 'popup') {
 			// move the popup so it doesn't appear on the element. the 7 px are for the popup arrow
@@ -1173,12 +1250,12 @@
 	$(document).on('keydown', function (event) {
 		if (event.which == 9) {
 			if ($.betterEditableData.submitting > 0 && $.betterEditableData.blockTab === false) {
-				event.preventDefault();
+				$.betterEditableData.utils.preventDefault(event);
 			} else if (!event.shiftKey && $.betterEditableData.submitting === 0 &&
 				$('[data-editable-div]:visible').length == 0 && $('[data-editable-first-tab]:visible').length > 0 &&
 				typeof $('[data-editable-first-tab]:visible').first().betterEditable() === 'object' && $('[data-editable-first-tab]:visible').first().betterEditable() !== null &&
 				$('[data-editable-first-tab]:visible').first().betterEditable().options.tabbingOn == true) {
-				event.preventDefault();
+				$.betterEditableData.utils.preventDefault(event);
 				$('[data-editable-first-tab]:visible').first().betterEditable().show();
 			}
 		}
