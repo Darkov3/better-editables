@@ -14,6 +14,10 @@
 	font-style: italic;
 }
 
+	.editable-ready.disabled.empty {
+		font-style: normal;
+	}
+
 .editable-error {
 	color: #e80c4d;
 	display: block;

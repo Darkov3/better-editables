@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.11.2";
+	$.betterEditableData.version = "0.12.59";
 
 	// default functions definitions:
 	$.betterEditableData.default = {
@@ -141,7 +141,7 @@
 				return name + " is required!";
 			},
 			validator: function (value, validatorValue, $element) {
-				if (validatorValue === "false") {
+				if (validatorValue == "false" || validatorValue == false) {
 					return true;
 				}
 				if (typeof value === "undefined" || value == null || value === '') {
@@ -189,7 +189,7 @@
 			},
 			validator: function (value, validatorValue, $element) {
 				if ((typeof value === 'undefined' || value === null || value === "") &&
-					(validatorValue === "false" || validatorValue === false)) {
+					(validatorValue == "false" || validatorValue == false)) {
 					return true;
 				}
 				return (value.length == 0 || /^.+?@.+?\..+?$/.test(value));
@@ -201,7 +201,7 @@
 			},
 			validator: function (value, validatorValue, $element) {
 				if ((typeof value === 'undefined' || value === null || value === "") &&
-					(validatorValue === "false" || validatorValue === false)) {
+					(validatorValue == "false" || validatorValue == false)) {
 					return true;
 				}
 				return (value.length == 0 || /^[+]{0,1}[0-9]+$/.test(value));
@@ -212,7 +212,7 @@
 				return name + " can't be changed at the moment!";
 			},
 			validator: function (value, validatorValue, $element) {
-				if (!validatorValue) {
+				if (validatorValue == "false" || validatorValue == false) {
 					return true;
 				}
 				return false;
@@ -476,7 +476,7 @@
 		if (this.options.tabbingOn === true && (typeof this.options.tabIndex === 'string' || typeof this.options.tabIndex === 'number')) {
 			this.$element.attr('data-tab-index', this.options.tabIndex);
 		}
-		this.value = setIfDefined([this.$element.data('value'), settings.value, this.$element.attr('value'), this.$element.text()]);
+		this.setValue(setIfDefined([this.$element.data('value'), settings.value, this.$element.attr('value'), this.$element.text()]));
 		this.state = {};
 		this.resetState();
 		this.state.popupOpen = false;
@@ -495,12 +495,12 @@
 			self.show();
 
 			// if bool, trigger input click
-			if (self.options.type == 'bool') {
+			if (self.options.type == 'bool' && !self.isReadOnly()) {
 				self.$input.trigger('click');
 			}
 		});
 		this.$element.addClass('editable-ready');
-		this.$element.trigger("init", this);
+		this.$element.trigger("be.init", this);
 	}
 
 	BetterEditable.prototype.initializeValidators = function () {
@@ -578,8 +578,19 @@
 
 		// submit on focusing outside the editable, unless its set to false or its a bool
 		if (this.options.type != 'bool' && this.options.submitOnBlur !== false) {
-			$(document).on('click', function () {
+			$(document).on('click', function (event, test1, test2) {
+				if (typeof event.originalEvent !== 'undefined') {
+					event = event.originalEvent;
+				}
 				if (self.options.submitOnBlur === true && self.state.readOnly === false && self.isShown()) {
+					// do not submit, if an autocomplete element is clicked
+					if (self.options.type == 'autocomplete') {
+						for (var index = 0; index < event.path.length; ++index) {
+							if ($(event.path[index]).hasClass('ui-autocomplete')) {
+								return;
+							}
+						}
+					}
 					self.initiateSubmit();
 				}
 			});
@@ -594,11 +605,8 @@
 		//bool type has no key events, but has click event
 		if (this.options.type === 'bool') {
 			this.$input.on('click', function () {
-				// convert the current value to bool type
-				self.setInputValue(self.value);
-				self.value = self.getInputValue();
 				// inverse the bool value
-				self.setInputValue(!self.value);
+				self.setInputValue(!self.getValue());
 				self.initiateSubmit();
 			});
 		} else {
@@ -665,6 +673,14 @@
 				});
 			}
 			this.$input.datetimepicker(dateTimeSettings);
+			// sets current value if the conditions are met, or sets to null
+			if ((typeof dateTimeSettings['useCurrent'] === 'undefined' || dateTimeSettings['useCurrent'] === true) ||
+				typeof dateTimeSettings['defaultDate'] !== 'undefined') {
+				this.setValue(this.getInputValue());
+			} else {
+				this.$input.datetimepicker('clear');
+				this.setValue(this.getInputValue());
+			}
 		}
 		// create submit and cancel buttons, if enabled
 		if (this.options.buttonsOn === true) {
@@ -695,7 +711,7 @@
 		this.$inputDiv.remove();
 		this.createInputField();
 
-		this.$element.trigger("recreateInput", this);
+		this.$element.trigger("be.recreateInput", this);
 	};
 }
 
@@ -709,6 +725,10 @@
 		// if its bool, its always shown
 		return this.options.type == 'bool' || this.$inputDiv.is(":visible");
 	};
+
+	BetterEditable.prototype.isReadOnly = function() {
+		return this.state.readOnly;
+	}
 }
 
 // Main action scope
@@ -751,7 +771,7 @@
 		}
 		this.$input.focus();
 
-		this.$element.trigger("shown", this);
+		this.$element.trigger("be.shown", this);
 	};
 
 	BetterEditable.prototype.hideInput = function () {
@@ -763,7 +783,7 @@
 			this.togglePopupOpen(false);
 		}
 
-		this.$element.trigger("hidden", this);
+		this.$element.trigger("be.hidden", this);
 	};
 
 	BetterEditable.prototype.initiateSubmit = function (newValue) {
@@ -771,7 +791,7 @@
 			this.$input.val(newValue);
 		}
 
-		if (this.options.submitNoChange === false && this.value == this.getInputValue()) {
+		if (this.options.submitNoChange === false && this.getValue() == this.getInputValue()) {
 			this.cancel();
 			if (this.state.doTab !== false) {
 				this.triggerTabbing(this.state.doTab);
@@ -790,7 +810,7 @@
 		this.options.errorHandler('', this, false);
 		this.hideInput();
 
-		this.$element.trigger("cancelled", this);
+		this.$element.trigger("be.cancelled", this);
 	};
 
 	BetterEditable.prototype.triggerTabbing = function (tabDirection) {
@@ -798,7 +818,7 @@
 		nextTab += tabDirection;
 		var $nextEditable = $('[data-editable][data-tab-index="' + nextTab + '"]');
 		if ($nextEditable.length > 0) {
-			var continueTab = this.$element.trigger("beforeTab", {
+			var continueTab = this.$element.trigger("be.beforeTab", {
 				direction: tabDirection,
 				nextTab: nextTab,
 				editable: self
@@ -818,9 +838,56 @@
 
 // Getters, setters, toggle, reset scope
 {
+	BetterEditable.prototype.setValue = function (newValue) {
+		// convert value to boolean type, if type is bool
+		if (this.options.type == 'bool') {
+			if (typeof newValue !== 'boolean') {
+				if (typeof newValue === 'string') {
+					if (newValue.toLowerCase() == 'true') {
+						newValue = true;
+					} else {
+						newValue = false;
+					}
+				} else {
+					newValue = false;
+				}
+			}
+		}
+
+		var oldValue = this.getValue();
+		this.value = newValue;
+
+		this.$element.trigger("be.change", {
+			newValue: newValue,
+			oldValue: oldValue,
+			editable: this
+		});
+
+		return oldValue;
+	};
+
+	BetterEditable.prototype.getValue = function () {
+		// convert value to boolean type, if type is bool
+		if (this.options.type == 'bool') {
+			if (typeof this.value !== 'boolean') {
+				if (typeof this.value === 'string') {
+					if (this.value.toLowerCase() == 'true') {
+						this.value = true;
+					} else {
+						this.value = false;
+					}
+				} else {
+					this.value = false;
+				}
+			}
+		}
+
+		return this.value;
+	};
+
 	BetterEditable.prototype.setInputValue = function (newValue) {
 		if (typeof newValue === 'undefined') {
-			newValue = this.value;
+			newValue = this.getValue();
 			if (this.options.type == 'datetimepicker') {
 				var dateObj = this.$input.data('DateTimePicker').date();
 				if (dateObj !== null) {
@@ -851,7 +918,7 @@
 		} else if (this.options.type == 'datetimepicker') {
 			returnValue = this.$input.data('DateTimePicker').date();
 			if (returnValue !== null) {
-				returnValue = returnValue._d;
+				returnValue = returnValue._d.toString();
 			}
 		}
 		return returnValue;
@@ -876,6 +943,9 @@
 			toggleFlag = !this.state.readOnly;
 		}
 		if (toggleFlag === true) {
+			if (this.isShown()) {
+				this.cancel();
+			}
 			if (!this.$input.hasClass('disabled')) {
 				this.$input.addClass('disabled');
 			}
@@ -918,12 +988,12 @@
 	BetterEditable.prototype.validate = function (triggerErrors) {
 		var newValue = this.getInputValue();
 		if (!this.isShown()) {
-			newValue = this.value;
+			newValue = this.getValue();
 		}
 		var self = this;
 		// trigger before validate event
 		var returnData = {};
-		this.$element.trigger("beforeValidate", {
+		this.$element.trigger("be.beforeValidate", {
 			newValue: newValue,
 			editable: self,
 			returnData: returnData
@@ -934,7 +1004,7 @@
 		// get new value again, if it was changed in the event above
 		newValue = this.getInputValue();
 		if (!this.isShown()) {
-			newValue = this.value;
+			newValue = this.getValue();
 		}
 
 		for (var index = 0; index < this.validators.length; ++index) {
@@ -946,7 +1016,7 @@
 					this.options.errorHandler(errorMsg, this, true);
 				}
 				this.state.isValid = false;
-				this.$element.trigger("failedValidation", {
+				this.$element.trigger("be.failedValidation", {
 					newValue: newValue,
 					editable: self
 				});
@@ -959,14 +1029,14 @@
 	BetterEditable.prototype.submitData = function () {
 		var newValue = this.getInputValue();
 		if (!this.isShown()) {
-			newValue = this.value;
+			newValue = this.getValue();
 		}
-		var oldValue = this.value;
+		var oldValue = this.getValue();
 		var self = this;
 
 		// trigger before submit event
 		var returnData = {};
-		this.$element.trigger("beforeSubmit", {
+		this.$element.trigger("be.beforeSubmit", {
 			newValue: newValue,
 			editable: self,
 			returnData: returnData
@@ -978,14 +1048,14 @@
 		// get new value again, if it was changed in the event above
 		newValue = this.getInputValue();
 		if (!this.isShown()) {
-			newValue = this.value;
+			newValue = this.getValue();
 		}
 
-		this.value = newValue;
+		this.setValue(newValue);
 		// use custom data if defined
 		var dataToSent = $.extend({}, this.options.ajaxParams);
 		if (typeof dataToSent["value"] === 'undefined') {
-			dataToSent["value"] = this.value;
+			dataToSent["value"] = this.getValue();
 		}
 		if (typeof dataToSent["fieldName"] === 'undefined') {
 			dataToSent["fieldName"] = this.options.fieldName;
@@ -1012,7 +1082,7 @@
 		}
 		if (typeof ajaxObj["success"] === 'undefined') {
 			ajaxObj["success"] = function (data) {
-				self.$element.trigger("onSuccess", {
+				self.$element.trigger("be.ajaxSuccess", {
 					data: data,
 					editable: self
 				});
@@ -1027,13 +1097,14 @@
 		if (typeof ajaxObj["error"] === 'undefined') {
 			ajaxObj["error"] = function (errorObj, xhr, settings, exception) {
 				self.state.isValid = false;
-				self.errorValue = self.value;
-				self.value = oldValue;
-				self.$element.trigger("onError", {
+				var errorValue = self.getValue();
+				self.setValue(oldValue);
+				self.$element.trigger("be.ajaxError", {
 					errorObj: errorObj,
 					xhr: xhr,
 					settings: settings,
 					exception: exception,
+					errorValue: errorValue,
 					editable: self
 				});
 				self.options.onAjaxError(errorObj, xhr, settings, exception, self);
