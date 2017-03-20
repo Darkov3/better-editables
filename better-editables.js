@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.14.12";
+	$.betterEditableData.version = "0.14.13";
 
 	// utility functions
 	$.betterEditableData.utils = {
@@ -1107,6 +1107,8 @@
 		if (!this.isShown()) {
 			newValue = this.getValue();
 		}
+		var oldValue = this.getValue();
+		this.setValue(newValue);
 		var self = this;
 		// trigger before validate event
 		var returnData = {};
@@ -1136,6 +1138,7 @@
 					this.options.errorHandler(errorMsg, this, true);
 				}
 				this.state.isValid = false;
+				this.setValue(oldValue);
 				this.$element.trigger("be.failedValidation", {
 					newValue: newValue,
 					editable: self
@@ -1143,6 +1146,7 @@
 				return false;
 			}
 		}
+		this.setValue(oldValue);
 		return true;
 	};
 
@@ -1152,6 +1156,7 @@
 			newValue = this.getValue();
 		}
 		var oldValue = this.getValue();
+		this.setValue(newValue);
 		var self = this;
 
 		// trigger before submit event
