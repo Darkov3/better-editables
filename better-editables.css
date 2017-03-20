@@ -30,16 +30,17 @@
 
 	.editable-input-div.popup {
 		float: left;
+		position: absolute;
 	}
 
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu:before,
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu:after {
+	.editable-input-div.popup .editable-popup-wrapper:before,
+	.editable-input-div.popup .editable-popup-wrapper:after {
 		content: '';
 		display: inline-block;
 		position: absolute;
 	}
 
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu.bottom:before {
+	.editable-input-div.popup .editable-popup-wrapper.bottom:before {
 		border-left: 7px solid transparent;
 		border-right: 7px solid transparent;
 		border-bottom: 7px solid #ccc;
@@ -47,7 +48,7 @@
 		top: -7px;
 		left: 7px;
 	}
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu.bottom:after {
+	.editable-input-div.popup .editable-popup-wrapper.bottom:after {
 		border-left: 6px solid transparent;
 		border-right: 6px solid transparent;
 		border-bottom: 6px solid white;
@@ -55,7 +56,7 @@
 		left: 8px;
 	}
 
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu.top:before {
+	.editable-input-div.popup .editable-popup-wrapper.top:before {
 		border-left: 7px solid transparent;
 		border-right: 7px solid transparent;
 		border-top: 7px solid #ccc;
@@ -63,7 +64,7 @@
 		bottom: -7px;
 		left: 6px;
 	}
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu.top:after {
+	.editable-input-div.popup .editable-popup-wrapper.top:after {
 		border-left: 6px solid transparent;
 		border-right: 6px solid transparent;
 		border-top: 6px solid white;
@@ -71,7 +72,7 @@
 		left: 7px;
 	}
 
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu.right:before {
+	.editable-input-div.popup .editable-popup-wrapper.right:before {
 		border-top: 7px solid transparent;
 		border-bottom: 7px solid transparent;
 		border-right: 7px solid #ccc;
@@ -79,7 +80,7 @@
 		left: -7px;
 		top: 6px;
 	}
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu.right:after {
+	.editable-input-div.popup .editable-popup-wrapper.right:after {
 		border-top: 6px solid transparent;
 		border-bottom: 6px solid transparent;
 		border-right: 6px solid white;
@@ -87,7 +88,7 @@
 		top: 7px;
 	}
 
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu.left:before {
+	.editable-input-div.popup .editable-popup-wrapper.left:before {
 		border-top: 7px solid transparent;
 		border-bottom: 7px solid transparent;
 		border-left: 7px solid #ccc;
@@ -95,7 +96,7 @@
 		right: -7px;
 		top: 6px;
 	}
-	.editable-input-div.popup .editable-popup-wrapper.dropdown-menu.left:after {
+	.editable-input-div.popup .editable-popup-wrapper.left:after {
 		border-top: 6px solid transparent;
 		border-bottom: 6px solid transparent;
 		border-left: 6px solid white;
@@ -106,6 +107,24 @@
 .editable-popup-wrapper {
 	display: block;
 	padding: 10px;
+	position: absolute;
+	top: 100%;
+	left: 0;
+	z-index: 1000;
+	float: left;
+	min-width: 160px;
+	margin: 2px 0 0;
+	font-size: 14px;
+	text-align: left;
+	list-style: none;
+	background-color: #fff;
+	-webkit-background-clip: padding-box;
+	background-clip: padding-box;
+	border: 1px solid #ccc;
+	border: 1px solid rgba(0,0,0,.15);
+	border-radius: 4px;
+	-webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+	box-shadow: 0 6px 12px rgba(0,0,0,.175);
 }
 
 .editable-input-wrapper {

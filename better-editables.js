@@ -1,13 +1,13 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.12.62";
+	$.betterEditableData.version = "0.14.10";
 
 	// utility functions
 	$.betterEditableData.utils = {
 		// for IE compatibility
 		stopPropagation: function (event) {
-			if(event.stopPropagation) {
+			if (event.stopPropagation) {
 				event.stopPropagation();
 			} else {
 				event.returnValue = false;
@@ -15,7 +15,7 @@
 		},
 		// for IE compatibility
 		preventDefault: function (event) {
-			if(event.preventDefault) {
+			if (event.preventDefault) {
 				event.preventDefault();
 			} else {
 				event.returnValue = false;
@@ -187,7 +187,7 @@
 				return name + " is required!";
 			},
 			validator: function (value, validatorValue, $element) {
-				if (validatorValue == "false" || validatorValue == false) {
+				if (validatorValue === "false" || validatorValue === false) {
 					return true;
 				}
 				if (typeof value === "undefined" || value == null || value === '') {
@@ -235,7 +235,7 @@
 			},
 			validator: function (value, validatorValue, $element) {
 				if ((typeof value === 'undefined' || value === null || value === "") &&
-					(validatorValue == "false" || validatorValue == false)) {
+					(validatorValue === "false" || validatorValue === false)) {
 					return true;
 				}
 				return (value.length == 0 || /^.+?@.+?\..+?$/.test(value));
@@ -247,7 +247,7 @@
 			},
 			validator: function (value, validatorValue, $element) {
 				if ((typeof value === 'undefined' || value === null || value === "") &&
-					(validatorValue == "false" || validatorValue == false)) {
+					(validatorValue === "false" || validatorValue === false)) {
 					return true;
 				}
 				return (value.length == 0 || /^[+]{0,1}[0-9]+$/.test(value));
@@ -258,7 +258,7 @@
 				return name + " can't be changed at the moment!";
 			},
 			validator: function (value, validatorValue, $element) {
-				if (validatorValue == "false" || validatorValue == false) {
+				if (validatorValue === "false" || validatorValue === false) {
 					return true;
 				}
 				return false;
@@ -315,10 +315,10 @@
 			return $.betterEditableData.version;
 		},
 		getValue: function (editable) {
-			return editable.value;
+			return editable.getValue();
 		},
 		setValue: function (editable, newValue) {
-			editable.value = newValue
+			editable.setValue(newValue);
 			editable.options.displayFunction(editable);
 		},
 		submit: function (editable) {
@@ -336,7 +336,8 @@
 			} else if (optionName == "tabbingOn" && (typeof editable.options.tabIndex === 'string' || typeof editable.options.tabIndex === 'number')) {
 				editable.$element.attr('data-tab-index', editable.options.tabIndex);
 			} else if (optionName == 'submitOnBlur' || optionName == 'clearButton' || optionName == 'buttonsOn' ||
-				optionName == 'inputClass' || optionName == 'buttonClass' || optionName == 'type' || optionName == 'mode') {
+				optionName == 'inputClass' || optionName == 'buttonClass' || optionName == 'type' || optionName == 'mode' || 
+				optionName == 'typeSettings' || optionName == 'dataSource') {
 				if (editable.options.type != 'bool' || optionName == 'type') {
 					editable.recreateInputField();
 				}
@@ -394,7 +395,7 @@
 			}
 		},
 		tab: function (editable, direction) {
-			if (editable.isShown() && editable.options.tabbingOn === true) {
+			if (editable.isShown() && editable.canTab()) {
 				if (direction !== -1) {
 					direction = 1;
 				}
@@ -402,18 +403,18 @@
 				editable.initiateSubmit();
 			}
 		},
-		createValidator: function(editable, validatorName, validatorFunction, messageFunction) {
-			if ($.betterEditableData.validators[validatorName] !== 'undefined') {
-				throw "This validator already exists!";
+		createValidator: function (editable, validatorName, validatorFunction, messageFunction) {
+			if (typeof $.betterEditableData.validators[validatorName] !== 'undefined') {
+				throw "Validator '" + validatorName + "' already exists!";
 			}
 			$.betterEditableData.validators[validatorName] = {
 				errorMsg: messageFunction,
 				validator: validatorFunction
 			}
 		},
-		attachValidator: function(editable, validatorName, validatorValue) {
-			if ($.betterEditableData.validators[validatorName] === 'undefined') {
-				throw "This validator does not exist!";
+		attachValidator: function (editable, validatorName, validatorValue) {
+			if (typeof $.betterEditableData.validators[validatorName] === 'undefined') {
+				throw "Validator '" + validatorName + "' does not exist!";
 			}
 			var found = -1;
 			for (var index = 0; index < editable.validators.length; ++index) {
@@ -429,7 +430,7 @@
 				editable.$element.data(validatorName, validatorValue);
 			}
 		},
-		detachValidator: function(editable, validatorName) {
+		detachValidator: function (editable, validatorName) {
 			for (var index = 0; index < editable.validators.length; ++index) {
 				if (editable.validators[index] == validatorName) {
 					editable.validators.splice(index, 1);
@@ -449,9 +450,16 @@
 		this.$element = settings.$element;
 
 		// setter function
-		function setIfDefined(valArray) {
+		function setIfDefined(valArray, boolType) {
 			for (var index = 0; index < valArray.length; ++index) {
 				if (typeof valArray[index] !== "undefined") {
+					if (boolType === true) {
+						if ((typeof valArray[index] === 'string' && valArray[index].toLowerCase() === 'true') || valArray[index] === true) {
+							return true;
+						} else {
+							return false;
+						}
+					}
 					return valArray[index];
 				}
 			}
@@ -494,8 +502,8 @@
 			return $.betterEditableData.default.errorHandler(errorMsg, editable, show);
 		}]);
 		// features:
-		this.options.submitNoChange = setIfDefined([this.$element.data('submit-no-change'), settings.submitNoChange, false]);
-		this.options.submitOnBlur = setIfDefined([this.$element.data('submit-on-blur'), settings.submitOnBlur, true]);
+		this.options.submitNoChange = setIfDefined([this.$element.data('submit-no-change'), settings.submitNoChange, false], true);
+		this.options.submitOnBlur = setIfDefined([this.$element.data('submit-on-blur'), settings.submitOnBlur, true], true);
 		this.options.emptyDisplay = setIfDefined([this.$element.data('empty-display'), settings.emptyDisplay, "n/a"]);
 		this.options.boolDisplay = setIfDefined([settings.boolDisplay, function (editable, boolValue) {
 			return $.betterEditableData.default.boolDisplay(editable, boolValue);
@@ -509,13 +517,13 @@
 		this.options.dateDisplay = setIfDefined([settings.dateDisplay, function (editable, value) {
 			return $.betterEditableData.default.dateDisplay(editable, value);
 		}]);
-		this.options.clearButton = setIfDefined([this.$element.data('clear-button'), settings.clearButton, true]);
-		this.options.buttonsOn = setIfDefined([this.$element.data('buttons-on'), settings.buttonsOn, true]);
+		this.options.clearButton = setIfDefined([this.$element.data('clear-button'), settings.clearButton, true], true);
+		this.options.buttonsOn = setIfDefined([this.$element.data('buttons-on'), settings.buttonsOn, true], true);
 		this.options.inputClass = setIfDefined([this.$element.data('input-class'), settings.inputClass]);
 		this.options.buttonClass = setIfDefined([this.$element.data('button-class'), settings.buttonClass]);
 		this.options.errorClass = setIfDefined([this.$element.data('error-class'), settings.errorClass]);
 		this.options.tabIndex = setIfDefined([this.$element.data('tab-index'), settings.tabIndex]);
-		this.options.tabbingOn = setIfDefined([this.$element.data('tabbing-on'), settings.tabbingOn, false]);
+		this.options.tabbingOn = setIfDefined([this.$element.data('tabbing-on'), settings.tabbingOn, false], true);
 
 		// initialization:
 		this.$element.attr('data-editable', '');
@@ -673,12 +681,15 @@
 			});
 		} else {
 			this.$input.on('keydown', function (event) {
-				if (event.which == 27) { // escape pressed => do cancel
+				// escape pressed => do cancel
+				if (event.which == 27) {
 					$.betterEditableData.utils.preventDefault(event);
 					self.cancel();
-				} else if (event.which == 13 && self.options.type != 'textarea') { // enter pressed and type is not textarea => initiate submit
+					// enter pressed and type is not textarea unless ctrl key is pressed => initiate submit
+				} else if (event.which == 13 && (self.options.type != 'textarea' || event.ctrlKey)) {
 					$.betterEditableData.utils.preventDefault(event);
-					if (self.options.tabbingOn) { // trigger tabbing, if enabled
+					// trigger tabbing, if enabled
+					if (self.canTab()) {
 						if (event.shiftKey) {
 							self.state.doTab = -1;
 						} else {
@@ -686,7 +697,7 @@
 						}
 					}
 					self.initiateSubmit();
-				} else if (self.options.tabbingOn === true && event.which == 9) { // tab pressed => trigger tabbing and submit, if enabled
+				} else if (self.canTab() && event.which == 9) { // tab pressed => trigger tabbing and submit, if enabled
 					$.betterEditableData.utils.preventDefault(event);
 					if (event.shiftKey) {
 						self.state.doTab = -1;
@@ -699,11 +710,15 @@
 		}
 
 		this.$inputDiv.hide();
-		this.$element.after(this.$inputDiv);
+		if (this.options.mode == 'popup') {
+			$('body').append(this.$inputDiv);
+		} else {
+			this.$element.after(this.$inputDiv);
+		}
 		this.$inputDiv.append($inputWrapper);
 
 		// create clear button to clear the input value, if enabled and correct type and its not IE: IE has its own clear button
-		if (inputType != 'select' && inputType != 'datetimepicker' && this.options.clearButton === true && 
+		if (inputType != 'select' && inputType != 'datetimepicker' && this.options.clearButton === true &&
 			$.betterEditableData.utils.getIEVersion() === 0) {
 			var $clearButton = $("<span></span>").addClass('editable-clear-button').text('✖');
 			$clearButton.on('click', function () {
@@ -762,7 +777,7 @@
 		}
 		// add popup div
 		if (this.options.mode == 'popup') {
-			var popupWrap = $('<div></div>').addClass('editable-popup-wrapper').addClass('dropdown-menu').addClass(this.options.placement);
+			var popupWrap = $('<div></div>').addClass('editable-popup-wrapper').addClass(this.options.placement);
 			this.$inputDiv.wrapInner(popupWrap);
 		}
 	};
@@ -773,6 +788,7 @@
 		}
 		this.$inputDiv.remove();
 		this.createInputField();
+		this.options.displayFunction(this);
 
 		this.$element.trigger("be.recreateInput", this);
 	};
@@ -789,9 +805,14 @@
 		return this.options.type == 'bool' || this.$inputDiv.is(":visible");
 	};
 
-	BetterEditable.prototype.isReadOnly = function() {
+	BetterEditable.prototype.isReadOnly = function () {
 		return this.state.readOnly;
-	}
+	};
+
+	BetterEditable.prototype.canTab = function () {
+		return this.options.tabbingOn === true && !this.isReadOnly() &&
+		(typeof this.options.tabIndex === 'string' || typeof this.options.tabIndex === 'number');
+	};
 }
 
 // Main action scope
@@ -804,31 +825,35 @@
 		if (this.state.isValid) {
 			this.options.errorHandler('', this, false);
 		}
-		var afterShow = function(editable) {
+		var afterShow = function (editable) {
 			editable.setInputValue();
 			editable.$inputDiv.show();
 			if (editable.options.mode === 'popup') {
 				// move the popup so it doesn't appear on top of the editable element.
 				editable.togglePopupOpen(true);
+				var topPos = editable.$element.offset()['top'];
+				var leftPos = editable.$element.offset()['left'];
 				if (editable.options.placement === 'bottom') {
-					editable.$inputDiv.css('top', (editable.$element.outerHeight() + 7) + 'px');
+					topPos += 7;
 				} else if (editable.options.placement === 'top') {
 					var heightOffset = editable.$element.outerHeight();
 					if (editable.$inputDiv.children().first().outerHeight() > heightOffset) {
 						heightOffset = editable.$inputDiv.children().first().outerHeight();
 					}
-					editable.$inputDiv.css('top', '-' + (heightOffset + 8) + 'px');
+					topPos -= heightOffset + 8;
 				} else if (editable.options.placement === 'right') {
-					editable.$inputDiv.css('right', '-' + (editable.$element.outerWidth() + 7) + 'px');
-					editable.$inputDiv.css('top', '-' + 6 + 'px');
+					leftPos += editable.$element.outerWidth() + 7;
+					topPos -= 6;
 				} else if (editable.options.placement === 'left') {
 					var widthOffset = editable.$element.outerWidth();
 					if (editable.$inputDiv.children().first().outerWidth() > widthOffset) {
 						widthOffset = editable.$inputDiv.children().first().outerWidth();
 					}
-					editable.$inputDiv.css('right', (widthOffset + 7) + 'px');
-					editable.$inputDiv.css('top', '-' + 6 + 'px');
+					leftPos -= widthOffset + 7;
+					topPos -= 6;
 				}
+				editable.$inputDiv.css('top', topPos + 'px');
+				editable.$inputDiv.css('left', leftPos + 'px');
 			}
 			editable.$input.focus();
 
@@ -838,7 +863,7 @@
 			var self = this;
 			// using when/then for IE compatibility
 			++$.betterEditableData.submitting;
-			$.when(this.$element.hide()).then(function(){
+			$.when(this.$element.hide()).then(function () {
 				self.$inputDiv.show();
 				--$.betterEditableData.submitting;
 				afterShow(self);
@@ -851,7 +876,7 @@
 	BetterEditable.prototype.hideInput = function () {
 		var self = this;
 		// using when/then for IE compatibility
-		$.when(this.$inputDiv.hide()).then(function(){
+		$.when(this.$inputDiv.hide()).then(function () {
 			self.$element.show();
 		});
 
@@ -890,26 +915,37 @@
 		this.$element.trigger("be.cancelled", this);
 	};
 
-	BetterEditable.prototype.triggerTabbing = function (tabDirection) {
+	BetterEditable.prototype.triggerTabbing = function (tabDirection, $nextEditable) {
+		if (!this.canTab()) {
+			return false;
+		}
 		var nextTab = Number(this.options.tabIndex);
-		nextTab += tabDirection;
-		var $nextEditable = $('[data-editable][data-tab-index="' + nextTab + '"]');
+		if (typeof $nextEditable === 'object' && $nextEditable !== null) {
+			nextTab = $nextEditable.data('tab-index');
+		} else {
+			nextTab += tabDirection;
+			$nextEditable = $('[data-editable][data-tab-index="' + nextTab + '"]');
+		}
 		if ($nextEditable.length > 0) {
+			var returnData = {};
 			var continueTab = this.$element.trigger("be.beforeTab", {
 				direction: tabDirection,
 				nextTab: nextTab,
-				editable: self
+				editable: this,
+				returnData: returnData
 			});
-			if (continueTab !== false) {
+			if (returnData.data !== false) {
 				$nextEditable = $nextEditable.first();
 				// if type is bool, skip it and go to next tab, unless tabbing is disabled
 				if ($nextEditable.betterEditable().options.type !== 'bool') {
 					$nextEditable.betterEditable().show();
-				} else if ($nextEditable.betterEditable().options.tabbingOn === true) {
+				} else if ($nextEditable.betterEditable().canTab()) {
 					$nextEditable.betterEditable().triggerTabbing(tabDirection);
 				}
 			}
 		}
+
+		return true;
 	};
 }
 
@@ -1085,10 +1121,16 @@
 		}
 
 		for (var index = 0; index < this.validators.length; ++index) {
-			var validatorValue = this.$element.data(this.validators[index] + "-val") || this.$element.data(this.validators[index]);
+			var validatorValue = this.$element.data(this.validators[index] + "-val");
+			if (typeof validatorValue === 'undefined') {
+				validatorValue = this.$element.data(this.validators[index]);
+			}
 			var validatorResult = $.betterEditableData.validators[this.validators[index]].validator(newValue, validatorValue, this.$element);
 			if (validatorResult === false) {
-				var errorMsg = $.betterEditableData.validators[this.validators[index]].errorMsg(this.options.fieldName, validatorValue, this.$element);
+				var errorMsg = this.$element.data(this.validators[index] + "-msg");
+				if (typeof errorMsg !== 'string') {
+					errorMsg = $.betterEditableData.validators[this.validators[index]].errorMsg(this.options.fieldName, validatorValue, this.$element);
+				}
 				if (triggerErrors !== false) {
 					this.options.errorHandler(errorMsg, this, true);
 				}
@@ -1236,10 +1278,10 @@
 		}
 	};
 
-	// when this function is ran, it will automatically make all html elements with data-editable into editables, with the sepcified settings.
+	// when this function is ran, it will automatically make all html elements with data-editable into editables, unless they have data-editable-no-init, with the sepcified settings.
 	// after that each one can be changed individually
 	$.initializeEditables = function (settings) {
-		$('[data-editable]').each(function () {
+		$('[data-editable]:not([data-editable-no-init])').each(function () {
 			$(this).betterEditable(settings);
 		});
 	};
@@ -1251,12 +1293,20 @@
 		if (event.which == 9) {
 			if ($.betterEditableData.submitting > 0 && $.betterEditableData.blockTab === false) {
 				$.betterEditableData.utils.preventDefault(event);
-			} else if (!event.shiftKey && $.betterEditableData.submitting === 0 &&
-				$('[data-editable-div]:visible').length == 0 && $('[data-editable-first-tab]:visible').length > 0 &&
-				typeof $('[data-editable-first-tab]:visible').first().betterEditable() === 'object' && $('[data-editable-first-tab]:visible').first().betterEditable() !== null &&
-				$('[data-editable-first-tab]:visible').first().betterEditable().options.tabbingOn == true) {
-				$.betterEditableData.utils.preventDefault(event);
-				$('[data-editable-first-tab]:visible').first().betterEditable().show();
+			} else if ($.betterEditableData.submitting === 0 && $('[data-editable-div]:visible').length == 0) {
+				if (!event.shiftKey && $('[data-editable-first-tab]:visible').length > 0 &&
+					typeof $('[data-editable-first-tab]:visible').first().betterEditable() === 'object' &&
+					$('[data-editable-first-tab]:visible').first().betterEditable() !== null &&
+					$('[data-editable-first-tab]:visible').first().betterEditable().options.tabbingOn == true) {
+					$.betterEditableData.utils.preventDefault(event);
+					$('[data-editable-first-tab]:visible').first().betterEditable().triggerTabbing(1, $('[data-editable-first-tab]:visible').first());
+				} else if (event.shiftKey && $('[data-editable-last-tab]:visible').length > 0 &&
+					typeof $('[data-editable-last-tab]:visible').first().betterEditable() === 'object' &&
+					$('[data-editable-last-tab]:visible').first().betterEditable() !== null &&
+					$('[data-editable-last-tab]:visible').first().betterEditable().options.tabbingOn == true) {
+					$.betterEditableData.utils.preventDefault(event);
+					$('[data-editable-last-tab]:visible').first().betterEditable().triggerTabbing(-1, $('[data-editable-last-tab]:visible').first());
+				}
 			}
 		}
 	});
