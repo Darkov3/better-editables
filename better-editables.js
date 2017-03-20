@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.14.10";
+	$.betterEditableData.version = "0.14.12";
 
 	// utility functions
 	$.betterEditableData.utils = {
@@ -605,7 +605,11 @@
 			this.$input = $('<input></input>').attr('type', 'hidden');
 		} else if (inputType == 'inputmask') {
 			this.$input = $('<input></input>').attr('type', 'text');
-			this.$input.inputmask(this.options.typeSettings["mask"], this.options.typeSettings["settings"]);
+			if (typeof this.options.typeSettings !== 'undefined') {
+				this.$input.inputmask(this.options.typeSettings["mask"], this.options.typeSettings["settings"]);
+			} else {
+				this.$input.inputmask();
+			}
 		} else if (inputType == 'datetimepicker') {
 			this.$input = $('<input></input>').attr('type', 'text').attr('onkeydown', "return false");
 		} else if (inputType == 'autocomplete') {
@@ -1115,10 +1119,7 @@
 			return false;
 		}
 		// get new value again, if it was changed in the event above
-		newValue = this.getInputValue();
-		if (!this.isShown()) {
-			newValue = this.getValue();
-		}
+		newValue = this.getValue();
 
 		for (var index = 0; index < this.validators.length; ++index) {
 			var validatorValue = this.$element.data(this.validators[index] + "-val");
@@ -1165,12 +1166,8 @@
 			return true;
 		}
 		// get new value again, if it was changed in the event above
-		newValue = this.getInputValue();
-		if (!this.isShown()) {
-			newValue = this.getValue();
-		}
+		newValue = this.getValue();
 
-		this.setValue(newValue);
 		// use custom data if defined
 		var dataToSent = $.extend({}, this.options.ajaxParams);
 		if (typeof dataToSent["value"] === 'undefined') {
