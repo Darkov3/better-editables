@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.14.15
+Highly Customizable JavaScript Editables v0.14.25
 
 Demo:
 https://darkov3.github.io/
@@ -15,13 +15,13 @@ Improvements:
 - setOption method should do nothing if new option value is same as current
 - fix recreating input for bool, instead of skipping it
 - make popup smart in displaying
+- add different classes for submit and cancel buttons
 
 Features:
 - add typeahead type <- priority
 - add checklist type (with radio buttons support) <- priority
 - add select2 type <- priority
 - add multiple input type <- priority
-- add toggle types: click, manual, double click, mouseover <- priority
 - add documentation <- priority
 - add function to apply option on all editables at once
 - add more comments

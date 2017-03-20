@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.14.15";
+	$.betterEditableData.version = "0.14.25";
 
 	// utility functions
 	$.betterEditableData.utils = {
@@ -344,6 +344,7 @@
 		}
 	};
 
+	// methods:
 	$.betterEditableData.methods = {
 		getVersion: function (editable) {
 			return $.betterEditableData.version;
@@ -506,6 +507,7 @@
 		}]);
 		this.options.fieldName = setIfDefined([this.$element.data('name'), settings.fieldName, this.$element.attr('name'), this.$element.attr('id')]);
 		this.options.pk = setIfDefined([this.$element.data('pk'), settings.pk]);
+		this.options.toggle = setIfDefined([this.$element.data('toggle'), settings.toggle, 'click']);
 		this.options.mode = setIfDefined([this.$element.data('mode'), settings.mode]);
 		if (this.options.mode !== 'popup') {
 			this.options.mode = 'inline';
@@ -576,13 +578,29 @@
 		}
 
 		var self = this;
-		this.$element.on('click', function () {
+		var initiationFunction = function() {
 			$.betterEditableData.utils.stopPropagation(event);
 			self.show();
 
 			// if bool, trigger input click
 			if (self.options.type == 'bool' && !self.isReadOnly()) {
 				self.$input.trigger('click');
+			}
+		}
+		// set all possible events, so toggle option can be changed dynamically
+		this.$element.on('click', function () {
+			if (self.options.toggle === 'click') {
+				initiationFunction();
+			}
+		});
+		this.$element.on('dblclick', function () {
+			if (self.options.toggle === 'doubleclick') {
+				initiationFunction();
+			}
+		});
+		this.$element.on('mouseenter', function () {
+			if (self.options.toggle === 'mouseenter') {
+				initiationFunction();
 			}
 		});
 		this.$element.addClass('editable-ready');
