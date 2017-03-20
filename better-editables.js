@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.14.13";
+	$.betterEditableData.version = "0.14.15";
 
 	// utility functions
 	$.betterEditableData.utils = {
@@ -46,7 +46,41 @@
 
 			// other browser
 			return 0;
-		}
+		},
+		// turns any value to a boolean
+		normalizeBoolean: function (value) {
+			if (typeof value !== 'boolean') {
+				if (typeof value === 'string' && value.toLowerCase() === 'true') {
+					value = true;
+				} else if (typeof value === 'number' && value === 1) {
+					value = true;
+				} else {
+					value = false;
+				}
+			}
+			return value;
+		},
+		// these options require the input field to be recreated
+		requireRecreateInput: [
+			'submitOnBlur',
+			'clearButton',
+			'buttonsOn',
+			'inputClass',
+			'buttonClass',
+			'type',
+			'mode',
+			'typeSettings',
+			'dataSource'
+		],
+		// these options require the option value to be normalized
+		requireBoolNormalization: [
+			'submitNoChange',
+			'submitOnBlur',
+			'clearButton',
+			'buttonsOn',
+			'tabbingOn',
+			'readOnly'
+		]
 	};
 
 	// default functions definitions:
@@ -326,6 +360,9 @@
 			editable.initiateSubmit();
 		},
 		setOption: function (editable, optionName, optionValue) {
+			if ($.inArray(optionName, $.betterEditableData.utils.requireBoolNormalization) !== -1) {
+				optionValue = $.betterEditableData.utils.normalizeBoolean(optionValue);
+			}
 			if (optionName == "readOnly") {
 				editable.toggleReadOnly(optionValue);
 				return;
@@ -335,11 +372,10 @@
 				editable.$element.attr('data-tab-index', editable.options.tabIndex);
 			} else if (optionName == "tabbingOn" && (typeof editable.options.tabIndex === 'string' || typeof editable.options.tabIndex === 'number')) {
 				editable.$element.attr('data-tab-index', editable.options.tabIndex);
-			} else if (optionName == 'submitOnBlur' || optionName == 'clearButton' || optionName == 'buttonsOn' ||
-				optionName == 'inputClass' || optionName == 'buttonClass' || optionName == 'type' || optionName == 'mode' || 
-				optionName == 'typeSettings' || optionName == 'dataSource') {
+			} else if ($.inArray(optionName, $.betterEditableData.utils.requireRecreateInput) !== -1) {
 				if (editable.options.type != 'bool' || optionName == 'type') {
-					editable.recreateInputField();
+					var preserveOldValue = (optionName != 'type');
+					editable.recreateInputField(preserveOldValue);
 				}
 			}
 		},
@@ -454,11 +490,7 @@
 			for (var index = 0; index < valArray.length; ++index) {
 				if (typeof valArray[index] !== "undefined") {
 					if (boolType === true) {
-						if ((typeof valArray[index] === 'string' && valArray[index].toLowerCase() === 'true') || valArray[index] === true) {
-							return true;
-						} else {
-							return false;
-						}
+						return $.betterEditableData.utils.normalizeBoolean(valArray[index]);
 					}
 					return valArray[index];
 				}
@@ -786,12 +818,20 @@
 		}
 	};
 
-	BetterEditable.prototype.recreateInputField = function () {
+	BetterEditable.prototype.recreateInputField = function (preserveOldValue) {
+		if (preserveOldValue !== false) {
+			preserveOldValue = true;
+		}
+		var oldValue = this.getValue();
 		if (this.isShown()) {
 			this.hideInput();
 		}
 		this.$inputDiv.remove();
 		this.createInputField();
+		if (preserveOldValue) {
+			this.setValue(oldValue);
+			this.setInputValue();
+		}
 		this.options.displayFunction(this);
 
 		this.$element.trigger("be.recreateInput", this);
@@ -958,17 +998,9 @@
 	BetterEditable.prototype.setValue = function (newValue) {
 		// convert value to boolean type, if type is bool
 		if (this.options.type == 'bool') {
-			if (typeof newValue !== 'boolean') {
-				if (typeof newValue === 'string') {
-					if (newValue.toLowerCase() == 'true') {
-						newValue = true;
-					} else {
-						newValue = false;
-					}
-				} else {
-					newValue = false;
-				}
-			}
+			newValue = $.betterEditableData.utils.normalizeBoolean(newValue);
+		} else if (this.options.type == 'datetimepicker' && newValue === null) {
+			this.$input.datetimepicker('clear');
 		}
 
 		var oldValue = this.getValue();
@@ -1107,8 +1139,6 @@
 		if (!this.isShown()) {
 			newValue = this.getValue();
 		}
-		var oldValue = this.getValue();
-		this.setValue(newValue);
 		var self = this;
 		// trigger before validate event
 		var returnData = {};
@@ -1120,8 +1150,6 @@
 		if (returnData.data === false) {
 			return false;
 		}
-		// get new value again, if it was changed in the event above
-		newValue = this.getValue();
 
 		for (var index = 0; index < this.validators.length; ++index) {
 			var validatorValue = this.$element.data(this.validators[index] + "-val");
@@ -1138,7 +1166,6 @@
 					this.options.errorHandler(errorMsg, this, true);
 				}
 				this.state.isValid = false;
-				this.setValue(oldValue);
 				this.$element.trigger("be.failedValidation", {
 					newValue: newValue,
 					editable: self
@@ -1146,7 +1173,6 @@
 				return false;
 			}
 		}
-		this.setValue(oldValue);
 		return true;
 	};
 

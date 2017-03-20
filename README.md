@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.14.13
+Highly Customizable JavaScript Editables v0.14.15
 
 Demo:
 https://darkov3.github.io/
@@ -8,14 +8,13 @@ https://darkov3.github.io/
 TODO:
 
 Bug Fixes:
-- normalize bool values with the setOption method
+- none
 
 Improvements:
 - add step setting for number type
 - setOption method should do nothing if new option value is same as current
 - fix recreating input for bool, instead of skipping it
 - make popup smart in displaying
-- create constant array with options which require normalization or input recreate
 
 Features:
 - add typeahead type <- priority
