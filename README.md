@@ -16,7 +16,7 @@ Improvements:
 - fix recreating input for bool, instead of skipping it
 
 Features:
-- add option to create custom types
+- add typeahead type
 - add function to apply option on all editables at once
 - add documentation
 - add more comments
