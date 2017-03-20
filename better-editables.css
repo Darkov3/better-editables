@@ -210,5 +210,5 @@
 	}
 
 .editable-autocomplete-list.editable-autocomplete-popup {
-	z-index: 1000;
+	z-index: 2000;
 }
