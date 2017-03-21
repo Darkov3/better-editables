@@ -1,7 +1,7 @@
 // betterEditableData scope
 {
 	$.betterEditableData = {};
-	$.betterEditableData.version = "0.14.25";
+	$.betterEditableData.version = "0.14.47";
 
 	// utility functions
 	$.betterEditableData.utils = {
@@ -80,6 +80,20 @@
 			'buttonsOn',
 			'tabbingOn',
 			'readOnly'
+		],
+		// these are the currently possible types
+		possibleTypes: [
+			'text',
+			'number',
+			'tel',
+			'email',
+			'textarea',
+			'select',
+			'bool',
+			'inputmask',
+			'datetimepicker',
+			'autocomplete',
+			'multifield'
 		]
 	};
 
@@ -403,7 +417,12 @@
 		},
 		focus: function (editable) {
 			if (editable.isShown()) {
-				editable.$input.focus();
+				editable.focus();
+			}
+		},
+		clear: function (editable) {
+			if (editable.isShown()) {
+				editable.clear();
 			}
 		},
 		destroy: function (editable) {
@@ -478,7 +497,7 @@
 	};
 
 	$.betterEditableData.submitting = 0;
-	$.betterEditableData.blockTab = false;
+	$.betterEditableData.blockTab = true;
 }
 
 // Initialization scope
@@ -622,8 +641,7 @@
 	BetterEditable.prototype.createInputField = function () {
 		var self = this;
 		var inputType = this.options.type;
-		if (inputType != 'number' && inputType != 'tel' && inputType != 'email' && inputType != 'textarea' && inputType != 'select'
-			&& inputType != 'bool' && inputType != 'inputmask' && inputType != 'datetimepicker' && inputType != 'autocomplete') {
+		if ($.inArray(inputType, $.betterEditableData.utils.possibleTypes) === -1) {
 			inputType = 'text';
 		}
 		this.$inputDiv = $("<div></div>").attr('data-editable-div', '').addClass(this.options.mode).addClass(inputType).addClass('editable-input-div').addClass(this.options.inputClass);
@@ -679,6 +697,33 @@
 				}
 			}
 			this.$input.autocomplete(autocompleteSettings);
+		} else if (inputType == 'multifield') {
+			this.$input = $('<div></div>').attr('type', inputType).addClass('editable-multifield-wrapper');
+			if (Object.prototype.toString.call(this.options.typeSettings) === '[object Array]') {
+				for (var index = 0; index < this.options.typeSettings.length; ++index) {
+					var newFieldType = this.options.typeSettings[index]['type'];
+					var $fieldWrapper = $('<div></div>').addClass('editable-multifield-input-wrapper').addClass(newFieldType + "-type");
+					var $newField;
+					if (newFieldType === 'textarea') {
+						$newField = $('<textarea></textarea>');
+					} else {
+						$newField = $('<input></input>').attr('type', newFieldType);
+					}
+					$newField.attr('name', this.options.typeSettings[index]['name']).addClass('editable-multifield-input');
+					if (newFieldType === 'checkbox') {
+						var normalizedValue = $.betterEditableData.utils.normalizeBoolean(this.options.typeSettings[index]['value']);
+						$newField.prop('checked', normalizedValue);
+						var $checkboxLabel = $('<label></label>').addClass('editable-multifield-label').addClass('checkbox-type');
+						$checkboxLabel.append($newField).append(this.options.typeSettings[index]['name']);
+						$fieldWrapper.append($checkboxLabel);
+					} else {
+						$fieldWrapper.append($('<div></div>').addClass('editable-multifield-label').text(this.options.typeSettings[index]['name'] + ":"));
+						$newField.val(this.options.typeSettings[index]['value']);
+						$fieldWrapper.append($newField);
+					}
+					this.$input.append($fieldWrapper);
+				}
+			}
 		} else {
 			this.$input = $('<input></input>').attr('type', inputType);
 		}
@@ -734,16 +779,19 @@
 				self.initiateSubmit();
 			});
 		} else {
-			this.$input.on('keydown', function (event) {
+			var $eventTriggerer = this.$input;
+			var onEscape = function(event) {
 				// escape pressed => do cancel
-				if (event.which == 27) {
+				$.betterEditableData.utils.preventDefault(event);
+				self.cancel();
+			};
+			var onEnter = function(event, isMultiField) {
+				// enter pressed => initiate submit, textarea requires ctrl + enter
+				if ($(event.target).attr('type') != 'textarea' || event.ctrlKey) {
 					$.betterEditableData.utils.preventDefault(event);
-					self.cancel();
-					// enter pressed and type is not textarea unless ctrl key is pressed => initiate submit
-				} else if (event.which == 13 && (self.options.type != 'textarea' || event.ctrlKey)) {
-					$.betterEditableData.utils.preventDefault(event);
-					// trigger tabbing, if enabled
-					if (self.canTab()) {
+					// do not tab on enter if type is multifield
+					if (self.canTab() && isMultiField !== true) {
+						console.log('doin tab');
 						if (event.shiftKey) {
 							self.state.doTab = -1;
 						} else {
@@ -751,7 +799,11 @@
 						}
 					}
 					self.initiateSubmit();
-				} else if (self.canTab() && event.which == 9) { // tab pressed => trigger tabbing and submit, if enabled
+				}
+			};
+			var onTab = function(event) {
+			 	// tab pressed => trigger tabbing and submit, if enabled
+			 	if (self.canTab()) {
 					$.betterEditableData.utils.preventDefault(event);
 					if (event.shiftKey) {
 						self.state.doTab = -1;
@@ -760,7 +812,45 @@
 					}
 					self.initiateSubmit();
 				}
-			});
+			};
+			if (this.options.type === 'multifield') {
+				// if type is multifield, then only the last input will trigger tabbing events
+				$eventTriggerer = this.$input.children().last().children().first();
+				// if type is multifield, then every input can submit with Enter and cancel with ESC
+				this.$input.find('input').each(function() {
+					if ($(this) == $eventTriggerer) {
+						return true;
+					}
+					$(this).on('keydown', function (event) {
+						if (event.which == 27) {
+							onEscape(event);
+						} else if (event.which == 13) {
+							onEnter(event, true);
+						}
+					});
+				});
+				// remove the other keydown event, this one can tab on enter too
+				$eventTriggerer.off('keydown');
+				$eventTriggerer.on('keydown', function (event) {
+					if (event.which == 27) {
+						onEscape(event);
+					} else if (event.which == 13) {
+						onEnter(event);
+					} else if (event.which == 9) {
+						onTab(event);
+					}
+				});
+			} else {
+				$eventTriggerer.on('keydown', function (event) {
+					if (event.which == 27) {
+						onEscape(event);
+					} else if (event.which == 13) {
+						onEnter(event);
+					} else if (event.which == 9) { // tab pressed => trigger tabbing and submit, if enabled
+						onTab(event);
+					}
+				});
+			}
 		}
 
 		this.$inputDiv.hide();
@@ -775,9 +865,15 @@
 		if (inputType != 'select' && inputType != 'datetimepicker' && this.options.clearButton === true &&
 			$.betterEditableData.utils.getIEVersion() === 0) {
 			var $clearButton = $("<span></span>").addClass('editable-clear-button').text('✖');
+			// multifield has special clear function
+			if (inputType == 'multifield') {
+				$clearButton.text('Clear').addClass('editable-button');
+			} else {
+				$clearButton.text('✖');
+			}
 			$clearButton.on('click', function () {
-				self.$input.val('');
-				self.$input.focus();
+				self.clearInputValue();
+				self.focus();
 			});
 			$clearWrapper = $('<div></div>').addClass('editable-clear-wrapper');
 			$clearWrapper.append(this.$input);
@@ -917,7 +1013,7 @@
 				editable.$inputDiv.css('top', topPos + 'px');
 				editable.$inputDiv.css('left', leftPos + 'px');
 			}
-			editable.$input.focus();
+			editable.focus();
 
 			editable.$element.trigger("be.shown", editable);
 		};
@@ -1091,6 +1187,51 @@
 		return returnValue;
 	};
 
+	BetterEditable.prototype.clearInputValue = function () {
+		if (this.options.type == 'multifield') {
+			// multifield clear: clear all inputs and uncheck checkboxes
+			this.$input.find('input').each(function(){
+				if ($(this).attr('type') == 'checkbox') {
+					$(this).prop('checked', false);
+				} else {
+					$(this).val('');
+				}
+			});
+			this.$input.find('textarea').each(function(){
+				$(this).val('');
+			});
+		} else {
+			// default clear
+			this.$input.val('');
+		}
+	};
+
+	BetterEditable.prototype.focus = function () {
+		if (this.options.type == 'multifield') {
+			// find the first input and focus it
+			var $focusWrapper = this.$input.children().first();
+			while ($focusWrapper.length > 0) {
+				if ($focusWrapper.hasClass("editable-multifield-input-wrapper")) {
+					var $focus = $focusWrapper.find('input:not([type="checkbox"])').first();
+					if ($focus.length > 0) {
+						$focus.focus();
+						break;
+					} else {
+						$focus = $focusWrapper.find('textarea').first();
+						if ($focus.length > 0) {
+							$focus.focus();
+							break;
+						}
+					}
+				}
+				$focusWrapper = $focusWrapper.next();
+			}
+		} else {
+			// default focus
+			this.$input.focus();
+		}
+	};
+
 	BetterEditable.prototype.togglePopupOpen = function (toggleFlag) {
 		if (toggleFlag !== true && toggleFlag !== false) {
 			toggleFlag = !this.state.popupOpen;
@@ -1113,19 +1254,12 @@
 			if (this.isShown()) {
 				this.cancel();
 			}
-			if (!this.$input.hasClass('disabled')) {
-				this.$input.addClass('disabled');
-			}
-			this.$input.attr('disabled', '');
 
 			if (!this.$element.hasClass('disabled')) {
 				this.$element.addClass('disabled');
 			}
 			this.$element.attr('disabled', '');
 		} else {
-			this.$input.removeClass('disabled');
-			this.$input.removeAttr('disabled');
-
 			this.$element.removeClass('disabled');
 			this.$element.removeAttr('disabled');
 		}
@@ -1337,7 +1471,7 @@
 {
 	$(document).on('keydown', function (event) {
 		if (event.which == 9) {
-			if ($.betterEditableData.submitting > 0 && $.betterEditableData.blockTab === false) {
+			if ($.betterEditableData.submitting > 0 && $.betterEditableData.blockTab === true) {
 				$.betterEditableData.utils.preventDefault(event);
 			} else if ($.betterEditableData.submitting === 0 && $('[data-editable-div]:visible').length == 0) {
 				if (!event.shiftKey && $('[data-editable-first-tab]:visible').length > 0 &&

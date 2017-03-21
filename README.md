@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.14.25
+Highly Customizable JavaScript Editables v0.14.47
 
 Demo:
 https://darkov3.github.io/
@@ -8,7 +8,7 @@ https://darkov3.github.io/
 TODO:
 
 Bug Fixes:
-- none
+- enter on last element does not trigger tabbing to first element
 
 Improvements:
 - add step setting for number type
@@ -16,6 +16,7 @@ Improvements:
 - fix recreating input for bool, instead of skipping it
 - make popup smart in displaying
 - add different classes for submit and cancel buttons
+- remove dataSource option and use typeSettings for select
 
 Features:
 - add typeahead type <- priority
@@ -33,3 +34,4 @@ Features:
 - add options to change button text
 - add animation capabilities on show/hide/value change
 - add send: true/false option
+- add submit success class

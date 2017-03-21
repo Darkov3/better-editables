@@ -28,6 +28,12 @@
 	position: relative;
 }
 
+	.editable-input-div.multifield .editable-input-wrapper {
+		display: block;
+		width: 100%;
+		float: none;
+	}
+
 	.editable-input-div.popup {
 		float: left;
 		position: absolute;
@@ -165,12 +171,25 @@
 	right: 18px;
 }
 
+	.editable-input-div.multifield .editable-clear-button {
+		float: left;
+    	position: relative;
+    	right: 0;
+	    width: initial;
+	    margin-left: 0;
+	    opacity: 1;
+	}
+
 .editable-button-wrapper {
 	display: inline-block;
 	position: relative;
 	top: 3px;
 	float: right;
 }
+
+	.editable-input-div.multifield .editable-button-wrapper {
+		float: left;
+	}
 
 	.editable-input-div.popup .editable-button-wrapper {
 		float: left;
@@ -205,10 +224,27 @@
 	margin-left: 5px;
 }
 
+	.editable-input-div.multifield .editable-button-wrapper .editable-button:first-of-type,
 	.editable-input-div.popup .editable-button-wrapper .editable-button:first-of-type {
 		margin-left: 0;
 	}
 
 .editable-autocomplete-list.editable-autocomplete-popup {
 	z-index: 2000;
+}
+
+.editable-multifield-wrapper .editable-multifield-input-wrapper {
+	margin-bottom: 5px;
+}
+
+	.editable-multifield-input-wrapper .editable-multifield-label.checkbox-type {
+		margin: 0;
+	}
+
+		.editable-multifield-input-wrapper .editable-multifield-label.checkbox-type .editable-multifield-input {
+			margin: 0;
+		}
+
+.editable-multifield-wrapper .editable-multifield-input-wrapper:last-of-type {
+	margin-bottom: 0;
 }
