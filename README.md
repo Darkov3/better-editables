@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.14.47
+Highly Customizable JavaScript Editables v0.14.63
 
 Demo:
 https://darkov3.github.io/
@@ -9,6 +9,7 @@ TODO:
 
 Bug Fixes:
 - enter on last element does not trigger tabbing to first element
+- when date time picker input is focused, all key events are prevented
 
 Improvements:
 - add step setting for number type
@@ -17,6 +18,8 @@ Improvements:
 - make popup smart in displaying
 - add different classes for submit and cancel buttons
 - remove dataSource option and use typeSettings for select
+- create validator method should auto attach the validator to an element after create, if called from an element
+- methods and functions should return appropriate objects
 
 Features:
 - add typeahead type <- priority
@@ -35,3 +38,8 @@ Features:
 - add animation capabilities on show/hide/value change
 - add send: true/false option
 - add submit success class
+- add trigger display method
+- add normal and empty value display option
+- add canSubmit check function
+- add value to date value normalization function
+- add checkbox type
