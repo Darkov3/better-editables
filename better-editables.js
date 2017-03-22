@@ -1177,8 +1177,26 @@
 					newValue = '';
 				}
 			}
+			this.$input.val(newValue);
+		} else if (this.options.type == 'multifield') {
+			Object.keys(newValue).forEach(function(name) {
+				var $field = this.$input.find('input[name="' + name + '"]').first();
+				if ($field.length > 0) {
+					if ($field.attr('type') === 'checkbox') {
+						$field.prop('checked', $.betterEditableData.utils.normalizeBoolean(newValue[name]));
+					} else {
+						$field.val(newValue[name]);
+					}
+				} else {
+					$field = this.$input.find('textarea[name="' + name + '"]').first();
+					if ($field.length > 0) {
+						$field.val(newValue[name]);
+					}
+				}
+			});
+		} else {
+			this.$input.val(newValue);
 		}
-		this.$input.val(newValue);
 	};
 
 	BetterEditable.prototype.getInputValue = function () {
@@ -1197,6 +1215,11 @@
 				}
 			}
 		} else if (this.options.type == 'datetimepicker') {
+			returnValue = this.$input.data('DateTimePicker').date();
+			if (returnValue !== null) {
+				returnValue = returnValue._d.toString();
+			}
+		} else if (this.options.type == 'multifield') {
 			returnValue = this.$input.data('DateTimePicker').date();
 			if (returnValue !== null) {
 				returnValue = returnValue._d.toString();

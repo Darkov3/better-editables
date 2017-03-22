@@ -172,6 +172,8 @@
 }
 
 	.editable-input-div.multifield .editable-clear-button {
+		line-height: 14px;
+		padding: 2px;
 		float: left;
     	position: relative;
     	right: 0;
