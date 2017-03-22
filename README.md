@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.14.63
+Highly Customizable JavaScript Editables v0.16.92
 
 Demo:
 https://darkov3.github.io/
@@ -17,9 +17,9 @@ Improvements:
 - fix recreating input for bool, instead of skipping it
 - make popup smart in displaying
 - add different classes for submit and cancel buttons
-- remove dataSource option and use typeSettings for select
 - create validator method should auto attach the validator to an element after create, if called from an element
 - methods and functions should return appropriate objects
+- if editable element has no id, it should be added and it should be equal to the editable field name. if the id is already taken or the field name is empty: throw error
 
 Features:
 - add typeahead type <- priority
@@ -41,5 +41,4 @@ Features:
 - add trigger display method
 - add normal and empty value display option
 - add canSubmit check function
-- add value to date value normalization function
 - add checkbox type
