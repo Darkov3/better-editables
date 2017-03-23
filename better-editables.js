@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.17.10";
+		$.betterEditableData.version = "0.17.11";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -697,6 +697,40 @@
 					initiationFunction(event);
 				}
 			});
+
+			// on blur, trigger submit, if conditions are met:
+			$(document).on('click', function (event) {
+				if (typeof event.originalEvent !== 'undefined') {
+					event = event.originalEvent;
+				}
+				if (self.options.type != 'bool' && self.options.submitOnBlur === true && self.state.readOnly === false && self.isShown()) {
+					// do not submit, if an autocomplete element is clicked
+					if (self.options.type == 'autocomplete') {
+						if (typeof event.path !== 'undefined') {
+							for (var index = 0; index < event.path.length; ++index) {
+								if ($(event.path[index]).hasClass('ui-autocomplete')) {
+									return;
+								}
+							}
+						} else {
+							// for IE compatibility
+							for (var key in event.target.parentNode) {
+								if (event.target.parentNode.hasOwnProperty(key)) {
+									var innerObj = event.target.parentNode[key];
+									for (var innerKey in innerObj) {
+										if (innerObj.hasOwnProperty(innerKey)) {
+											if (innerKey == 'uiAutocompleteItem') {
+												return;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					self.initiateSubmit();
+				}
+			});
 			this.$element.addClass('editable-ready');
 			this.$element.trigger("be.init", this);
 		}
@@ -824,38 +858,6 @@
 
 			// submit on focusing outside the editable, unless its set to false or its a bool
 			if (this.options.type != 'bool' && this.options.submitOnBlur !== false) {
-				$(document).on('click', function (event, test1, test2) {
-					if (typeof event.originalEvent !== 'undefined') {
-						event = event.originalEvent;
-					}
-					if (self.options.submitOnBlur === true && self.state.readOnly === false && self.isShown()) {
-						// do not submit, if an autocomplete element is clicked
-						if (self.options.type == 'autocomplete') {
-							if (typeof event.path !== 'undefined') {
-								for (var index = 0; index < event.path.length; ++index) {
-									if ($(event.path[index]).hasClass('ui-autocomplete')) {
-										return;
-									}
-								}
-							} else {
-								// for IE compatibility
-								for (var key in event.target.parentNode) {
-									if (event.target.parentNode.hasOwnProperty(key)) {
-										var innerObj = event.target.parentNode[key];
-										for (var innerKey in innerObj) {
-											if (innerObj.hasOwnProperty(innerKey)) {
-												if (innerKey == 'uiAutocompleteItem') {
-													return;
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-						self.initiateSubmit();
-					}
-				});
 				// do not submit when clicking inside the div
 				this.$inputDiv.on('click', function (event) {
 					if (self.options.submitOnBlur === true && self.state.readOnly === false && self.isShown()) {
