@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.17.08";
+		$.betterEditableData.version = "0.17.10";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -785,10 +785,13 @@
 								throw "Empty array given as field type!";
 							} else if (fieldType.length === 1) {
 								fieldType = fieldType[0];
+								fieldLabel += ": ";
 							} else {
 								fieldLabel = fieldType[1];
 								fieldType = fieldType[0];
 							}
+						} else {
+							fieldLabel += ": ";
 						}
 						var $fieldWrapper = $('<div></div>').addClass('editable-multifield-input-wrapper').addClass(fieldType + "-type");
 						var $newField;
@@ -806,7 +809,7 @@
 						} else {
 							$labelElement = $('<div></div>').addClass('editable-multifield-label');
 							if (typeof fieldLabel === 'string' && fieldLabel.trim() !== '' && fieldType !== 'hidden') {
-								$labelElement.text(fieldLabel + ": ");
+								$labelElement.text(fieldLabel);
 							}
 							$fieldWrapper.append($labelElement);
 							$fieldWrapper.append($newField);
@@ -1027,9 +1030,6 @@
 				preserveOldValue = true;
 			}
 			var oldValue = this.getValue();
-			if (this.options.type === 'multifield') {
-				debugger;
-			}
 			if (this.isShown()) {
 				this.hideInput(wasPopup);
 			}

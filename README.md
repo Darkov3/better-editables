@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.17.08
+Highly Customizable JavaScript Editables v0.17.10
 
 Demo:
 https://darkov3.github.io/
@@ -42,3 +42,4 @@ Features:
 - add normal and empty value display option
 - add canSubmit check function
 - add checkbox type
+- add compare function(will remove bugs with on blur)
