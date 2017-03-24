@@ -1234,7 +1234,6 @@
 		};
 
 		BetterEditable.prototype.compare = function (value1, value2, type) {
-			debugger;
 			if (typeof value1 === 'undefined') {
 				value1 = this.getValue();
 			}
@@ -1266,7 +1265,6 @@
 					return false;
 				}
 			}
-				debugger;
 			if (type === 'datetimepicker') {
 				if (typeof value1 === 'object') {
 					return value1.isSame(value2);
@@ -1274,7 +1272,6 @@
 					return value2.isSame(value1);
 				}
 			} else if (type === 'multifield' && this.utils.isArray(value1) && this.utils.isArray(value2)) {
-				debugger;
 				if (value1.length !== value2.length) {
 					return false;
 				}
@@ -1307,7 +1304,6 @@
 				newValue = this.utils.normalizeNumber(newValue);
 			}
 
-			debugger;
 			var oldValue = this.getValue();
 			this.value = newValue;
 
