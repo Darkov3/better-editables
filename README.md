@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.17.11
+Highly Customizable JavaScript Editables v0.18.27
 
 Demo:
 https://darkov3.github.io/
@@ -28,7 +28,7 @@ Features:
 - add select2 type <- priority
 - add documentation <- priority
 - add function to apply option on all editables at once
-- add more comments
+- add more code comments
 - add option to imitate a form submit(send FormData)
 - enable tabbing for Bool by converting it to select on tab
 - add isEmpty check function, which checks if value is empty
@@ -39,7 +39,6 @@ Features:
 - add send: true/false option
 - add submit success class
 - add trigger display method
-- add normal and empty value display option
+- add normal and empty value display function option
 - add canSubmit check function
 - add checkbox type
-- add compare function(will remove bugs with on blur)
