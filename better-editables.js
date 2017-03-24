@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.18.27";
+		$.betterEditableData.version = "0.18.28";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -449,8 +449,8 @@
 				editable.initiateSubmit(undefined, true);
 			},
 			setOption: function (editable, optionName, optionValue) {
-				if ($.inArray(optionName, editable.requireBoolNormalization) !== -1) {
-					optionValue = editable.normalizeBoolean(optionValue);
+				if ($.inArray(optionName, editable.utils.requireBoolNormalization) !== -1) {
+					optionValue = editable.utils.normalizeBoolean(optionValue);
 				}
 				if (optionName == "readOnly") {
 					editable.toggleReadOnly(optionValue);
@@ -462,7 +462,7 @@
 					editable.$element.attr('data-tab-index', editable.options.tabIndex);
 				} else if (optionName == "tabbingOn" && (typeof editable.options.tabIndex === 'string' || typeof editable.options.tabIndex === 'number')) {
 					editable.$element.attr('data-tab-index', editable.options.tabIndex);
-				} else if ($.inArray(optionName, editable.requireRecreateInput) !== -1) {
+				} else if ($.inArray(optionName, editable.utils.requireRecreateInput) !== -1) {
 					if (editable.options.type != 'bool' || optionName == 'type') {
 						var preserveOldValue = (optionName != 'type');
 						var wasPopup = (optionName == 'mode' && oldVal == 'popup');
