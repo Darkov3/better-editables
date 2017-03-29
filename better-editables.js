@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.18.33";
+		$.betterEditableData.version = "0.19.35";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -140,6 +140,9 @@
 		// default functions definitions:
 		$.betterEditableData.default = {
 			displayFunction: function (editable, value) {
+				if (editable.options.enableDisplay === false) {
+					return false;
+				}
 				if (typeof value === 'undefined') {
 					value = editable.value;
 					if (editable.options.type == 'select') {
@@ -163,6 +166,7 @@
 				} else {
 					editable.$element.removeClass('empty');
 				}
+				return true;
 			},
 			load: {
 				start: function (editable) {
@@ -655,6 +659,7 @@
 			// features:
 			this.options.submitNoChange = setIfDefined([this.$element.data('submit-no-change'), settings.submitNoChange, false], true);
 			this.options.submitOnBlur = setIfDefined([this.$element.data('submit-on-blur'), settings.submitOnBlur, true], true);
+			this.options.enableDisplay = setIfDefined([this.$element.data('enable-display'), settings.enableDisplay, true], true);
 			this.options.emptyDisplay = setIfDefined([this.$element.data('empty-display'), settings.emptyDisplay, "n/a"]);
 			this.options.boolDisplay = setIfDefined([settings.boolDisplay, function (editable, boolValue) {
 				return $.betterEditableData.default.boolDisplay(editable, boolValue);
@@ -1361,6 +1366,9 @@
 			} else if (this.options.type == 'number') {
 				// convert value to number type, if type is number
 				newValue = utils.normalizeNumber(newValue);
+			} else if (this.options.type == 'text') {
+				// convert value to string type, if type is text
+				newValue = String(newValue);
 			}
 
 			var oldValue = this.getValue();
@@ -1439,6 +1447,9 @@
 			} else if (this.options.type == 'number') {
 				// convert value to number type, if type is number
 				returnValue = utils.normalizeNumber(returnValue);
+			} else if (this.options.type == 'text') {
+				// convert value to string type, if type is text
+				returnValue = String(returnValue);
 			} else if (this.options.type == 'datetimepicker') {
 				if (this.$input.data('DateTimePicker').date() !== null) {
 					returnValue = this.$input.data('DateTimePicker').date().clone();
@@ -1624,13 +1635,18 @@
 			submitData = this.processSubmitData(submitData);
 			// trigger before submit event
 			var returnData = {
-				submitData: submitData
+				submitData: submitData,
+				oldValue: oldValue
 			};
 			this.$element.trigger("be.beforeSubmit", {
 				editable: self,
 				returnData: returnData
 			});
 			if (returnData.flag === false) {
+				// set back the value to the old value, since there is a pre-submit custom error
+				oldValue = returnData.oldValue;
+				this.setValue(oldValue);
+				this.state.isValid = false;
 				// returns true for a pre-submit error ; returning false is for after submit error
 				return true;
 			}

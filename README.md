@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.18.33
+Highly Customizable JavaScript Editables v0.19.35
 
 Demo:
 https://darkov3.github.io/
