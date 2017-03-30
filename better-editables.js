@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.19.35";
+		$.betterEditableData.version = "0.20.46";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -57,7 +57,7 @@
 
 				return typeof value == "object" && (toString.call(value) == "[object Array]" || ("constructor" in value && String(value.constructor) == strArray));
 			},
-			// turns any value to a boolean
+			// turns any value to a boolean type
 			normalizeBoolean: function (value) {
 				if (typeof value !== 'boolean') {
 					if (typeof value === 'string' && value.toLowerCase() === 'true') {
@@ -70,7 +70,7 @@
 				}
 				return value;
 			},
-			// turns any value to a number
+			// turns any value to a number type
 			normalizeNumber: function (value) {
 				if (typeof value === 'string') {
 					value = value.replace(',', '.');
@@ -79,6 +79,14 @@
 					return value = null;
 				}
 				return Number(value);
+			},
+			// turns any value to a string type
+			normalizeString: function (value) {
+				if (typeof value === 'undefined' || value === null) {
+					value = ''
+				}
+				value = String(value);
+				return value;
 			},
 			// attempts to create a date from string, then format it according to the date time picker object
 			formatNewDate: function (dateObj, newDate) {
@@ -133,6 +141,16 @@
 				'datetimepicker',
 				'autocomplete',
 				'multifield'
+			],
+			// these are the text types
+			textTypes: [
+				'text',
+				'password',
+				'tel',
+				'email',
+				'textarea',
+				'inputmask',
+				'autocomplete'
 			]
 		};
 		var utils = $.betterEditableData.utils;
@@ -576,6 +594,15 @@
 						editable.validators.splice(index, 1);
 						return;
 					}
+				}
+			},
+			overwriteValidator: function (editable, validatorName, validatorFunction, messageFunction) {
+				if (typeof $.betterEditableData.validators[validatorName] === 'undefined') {
+					throw "Validator '" + validatorName + "' does not exist!";
+				}
+				$.betterEditableData.validators[validatorName] = {
+					errorMsg: messageFunction,
+					validator: validatorFunction
 				}
 			}
 		};
@@ -1366,9 +1393,9 @@
 			} else if (this.options.type == 'number') {
 				// convert value to number type, if type is number
 				newValue = utils.normalizeNumber(newValue);
-			} else if (this.options.type == 'text') {
+			} else if ($.inArray(this.options.type, utils.textTypes) !== -1) {
 				// convert value to string type, if type is text
-				newValue = String(newValue);
+				newValue = utils.normalizeString(newValue);
 			}
 
 			var oldValue = this.getValue();
@@ -1564,15 +1591,18 @@
 			}
 			var self = this;
 			// trigger before validate event
-			var returnData = {};
+			var returnData = {
+				newValue: newValue
+			};
 			this.$element.trigger("be.beforeValidate", {
-				newValue: newValue,
 				editable: self,
 				returnData: returnData
 			});
 			if (returnData.flag === false) {
 				return false;
 			}
+			// gets a new value before validation, if changed in the event
+			newValue = returnData.newValue;
 
 			for (var index = 0; index < this.validators.length; ++index) {
 				var validatorValue = this.$element.data(this.validators[index] + "-val");
