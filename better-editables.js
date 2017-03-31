@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.20.46";
+		$.betterEditableData.version = "0.20.47";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -148,9 +148,7 @@
 				'password',
 				'tel',
 				'email',
-				'textarea',
-				'inputmask',
-				'autocomplete'
+				'textarea'
 			]
 		};
 		var utils = $.betterEditableData.utils;
