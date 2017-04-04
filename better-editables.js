@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.20.47";
+		$.betterEditableData.version = "0.21.47";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -607,6 +607,9 @@
 
 		$.betterEditableData.submitting = 0;
 		$.betterEditableData.blockTab = true;
+		$.betterEditableData.asyncRequests = false;
+		$.betterEditableData.requestBeingExecuted = false;
+		$.betterEditableData.requests = [];
 		
 		$.betterEditableData.functions = {
 			// when this function is ran, it will automatically run betterEditable function to all html elements with data-editable, 
@@ -620,6 +623,27 @@
 					methodArguments.unshift($(this).data('betterEditable'));
 					$(this).betterEditable.apply($(this), argumentArray);
 				});
+			},
+			addToQueue: function (ajaxObj) {
+				$.betterEditableData.requests.push(ajaxObj);
+			},
+			attemptRequestExecution: function (skipCheck) {
+				if (skipCheck === true || !$.betterEditableData.requestBeingExecuted) {
+					var ajaxObj = $.betterEditableData.requests.shift();
+					if (typeof ajaxObj === 'undefined') {
+						return false;
+					}
+					$.betterEditableData.requestBeingExecuted = true;
+					if (ajaxObj["doTab"] !== false) {
+						++$.betterEditableData.submitting;
+					}
+					$.ajax(ajaxObj);
+					return true;
+				}
+				return false;
+			},
+			requestExecutionEnd: function () {
+				$.betterEditableData.requestBeingExecuted = $.betterEditableData.functions.attemptRequestExecution(true);
 			}
 		};
 	}
@@ -1713,7 +1737,9 @@
 			}
 			if (typeof ajaxObj["beforeSend"] === 'undefined') {
 				ajaxObj["beforeSend"] = function () {
-					self.options.load.start(self);
+					if (!$.betterEditableData.asyncRequests) {
+						self.options.load.start(self);
+					}
 				};
 			}
 			if (typeof ajaxObj["success"] === 'undefined') {
@@ -1729,6 +1755,9 @@
 						oldValue: oldValue
 					});
 					self.afterProcess();
+					if ($.betterEditableData.asyncRequests) {
+						$.betterEditableData.functions.requestExecutionEnd();
+					}
 				};
 			}
 			if (typeof ajaxObj["error"] === 'undefined') {
@@ -1749,15 +1778,26 @@
 						editable: self
 					});
 					self.afterProcess();
+					if ($.betterEditableData.asyncRequests) {
+						$.betterEditableData.functions.requestExecutionEnd();
+					}
 				};
 			}
 
 			// only submit if url is defined
 			if (typeof ajaxObj["url"] === 'string' && ajaxObj["url"] !== '') {
-				if (self.state.doTab !== false) {
-					++$.betterEditableData.submitting;
+				// handle async requests
+				if ($.betterEditableData.asyncRequests) {
+					ajaxObj["doTab"] = this.state.doTab;
+					this.options.load.start(this);
+					$.betterEditableData.functions.addToQueue(ajaxObj);
+					$.betterEditableData.functions.attemptRequestExecution();
+				} else {
+					if (self.state.doTab !== false) {
+						++$.betterEditableData.submitting;
+					}
+					$.ajax(ajaxObj);
 				}
-				$.ajax(ajaxObj);
 			} else {
 				this.options.displayFunction(this);
 				if (self.state.doTab !== false) {
