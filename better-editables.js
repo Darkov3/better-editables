@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.21.47";
+		$.betterEditableData.version = "0.22.67";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -682,9 +682,17 @@
 			}
 			this.options.placement = setIfDefined([this.$element.data('placement'), settings.placement, "right"]);
 			this.options.type = setIfDefined([this.$element.data('type'), this.$element.attr('type'), settings.type, "text"]);
-			this.options.typeSettings = settings.typeSettings;
+			this.options.typeSettings = setIfDefined([this.$element.data('type-settings'), settings.typeSettings]);
 			this.options.ajaxObject = settings.ajaxObject;
 			this.options.ajaxParams = settings.ajaxParams;
+			if (typeof this.options.ajaxParams === 'undefined') {
+				this.options.ajaxParams = {};
+			}
+			var dataIndex = 0;
+			while(typeof this.$element.data("ajax-param" + dataIndex + "-name") !== 'undefined') {
+				this.options.ajaxParams[this.$element.data("ajax-param" + dataIndex + "-name")] = this.$element.data("ajax-param" + dataIndex + "-value");
+				++dataIndex;
+			}
 			this.options.load = setIfDefined([settings.load, {
 				start: function (editable) {
 					return $.betterEditableData.default.load.start(editable);
@@ -888,11 +896,46 @@
 				this.$input.autocomplete(autocompleteSettings);
 			} else if (inputType == 'multifield') {
 				this.$input = $('<div></div>').addClass('editable-multifield-wrapper');
+				var dataSource;
 				if (typeof this.options.typeSettings === 'object' && !utils.isArray(this.options.typeSettings)) {
-					Object.keys(this.options.typeSettings).forEach(function (name) {
+					dataSource = this.options.typeSettings;
+				} else if (this.options.typeSettings === "data") {
+					dataSource = {};
+					var inputDataSource = [];
+					var dataIndex = 0;
+					while(typeof this.$element.data("input" + dataIndex + "-name") !== 'undefined') {
+						var fname = this.$element.data("input" + dataIndex + "-name");
+						var ftype = this.$element.data("input" + dataIndex + "-type");
+						var fval = this.$element.data("input" + dataIndex + "-value");
+						var flabel = this.$element.data("input" + dataIndex + "-label");
+						if (typeof fname === 'string') {
+							if (typeof ftype !== 'string') {
+								ftype = "text";
+							}
+							if (typeof fval === 'undefined') {
+								fval = "";
+								if (ftype === 'checkbox'){
+									fval = utils.normalizeBoolean(fval);
+								}
+							}
+							dataSource[fname] = [ftype, flabel, fval];
+							var objToAdd = {};
+							objToAdd[fname] = fval;
+							inputDataSource.push($.extend({}, objToAdd));
+						}
+						++dataIndex;
+					}
+					// set value if its not defined in data, so the flow can set the value correctly
+					if (typeof this.$element.data('value') === 'undefined') {
+						this.$element.data('value', inputDataSource);
+					}
+				}
+				if (typeof dataSource === 'object' && !utils.isArray(dataSource)) {
+					Object.keys(dataSource).forEach(function (name) {
 						var fieldLabel = name;
 						var fieldName = name;
-						var fieldType = self.options.typeSettings[name];
+						var fieldType = dataSource[name];
+						var fieldValue = undefined;
 						if (utils.isArray(fieldType)) {
 							if (fieldType.length === 0) {
 								throw "Empty array given as field type!";
@@ -900,7 +943,14 @@
 								fieldType = fieldType[0];
 								fieldLabel += ": ";
 							} else {
-								fieldLabel = fieldType[1];
+								if (typeof fieldType[1] === 'string') {
+									fieldLabel = fieldType[1];
+								} else {
+									fieldLabel += ": ";
+								}
+								if (fieldType.length > 2) {
+									fieldValue = fieldType[2];
+								}
 								fieldType = fieldType[0];
 							}
 						} else {
@@ -910,16 +960,18 @@
 						var $newField;
 						var $labelElement;
 						if (fieldType === 'textarea') {
-							$newField = $('<textarea></textarea>');
+							$newField = $('<textarea></textarea>').val(fieldValue);
 						} else {
 							$newField = $('<input></input>').attr('type', fieldType);
 						}
 						$newField.attr('name', fieldName).addClass('editable-multifield-input');
 						if (fieldType === 'checkbox') {
+							$newField.prop('checked', utils.normalizeBoolean(fieldValue));
 							$labelElement = $('<label></label>').addClass('editable-multifield-label').addClass('checkbox-type');
 							$labelElement.append($newField).append(fieldLabel);
 							$fieldWrapper.append($labelElement);
 						} else {
+							$newField.val(fieldValue);
 							$labelElement = $('<div></div>').addClass('editable-multifield-label');
 							if (typeof fieldLabel === 'string' && fieldLabel.trim() !== '' && fieldType !== 'hidden') {
 								$labelElement.text(fieldLabel);

@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.21.47
+Highly Customizable JavaScript Editables v0.22.67
 
 Demo:
 https://darkov3.github.io/
@@ -21,6 +21,7 @@ Improvements:
 - methods and functions should return appropriate objects
 - if editable element has no id, it should be added and it should be equal to the editable field name. if the id is already taken or the field name is empty: throw error
 - add option to hide input field in date time picker
+- select the input on tabbing
 
 Features:
 - add typeahead type <- priority
