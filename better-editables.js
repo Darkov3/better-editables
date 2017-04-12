@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.22.67";
+		$.betterEditableData.version = "0.22.87";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -791,28 +791,27 @@
 					event = event.originalEvent;
 				}
 				if (self.options.type != 'bool' && self.options.submitOnBlur === true && self.state.readOnly === false && self.isShown()) {
-					// do not submit, if an autocomplete element is clicked
-					if (self.options.type == 'autocomplete') {
-						if (typeof event.path !== 'undefined') {
-							for (var index = 0; index < event.path.length; ++index) {
-								if ($(event.path[index]).hasClass('ui-autocomplete')) {
-									return;
-								}
-							}
-						} else {
-							// for IE compatibility
-							for (var key in event.target.parentNode) {
-								if (event.target.parentNode.hasOwnProperty(key)) {
-									var innerObj = event.target.parentNode[key];
-									for (var innerKey in innerObj) {
-										if (innerObj.hasOwnProperty(innerKey)) {
-											if (innerKey == 'uiAutocompleteItem') {
-												return;
-											}
-										}
-									}
-								}
-							}
+					// do not submit, if an autocomplete element is clicked or element has data-editable-no-submit or has class js-editable-no-submit
+					var pathArray = [];
+					if (typeof event.path === 'undefined') {
+						// for IE compatibility
+						var currentTarget = event.target;
+						while (typeof currentTarget !== 'undefined' && currentTarget.tagName !== 'HTML') {
+							pathArray.push(currentTarget);
+							currentTarget = currentTarget.parentNode;
+						}
+						if (typeof currentTarget === 'object' && currentTarget !== null && currentTarget.tagName === 'HTML') {
+							pathArray.push(currentTarget);
+						}
+						pathArray.push(document);
+						pathArray.push(window);
+					} else {
+						pathArray = event.path;
+					}
+					for (var index = 0; index < pathArray.length; ++index) {
+						if ($(pathArray[index]).hasClass('js-editable-no-submit') || (typeof $(pathArray[index]).data('editable-no-submit') !== 'undefined' && 
+							!($(pathArray[index]).data('editable-no-submit') === false || String($(pathArray[index]).data('editable-no-submit')).toLowerCase() === 'false'))) {
+							return;
 						}
 					}
 					self.initiateSubmit();
@@ -840,7 +839,7 @@
 			if ($.inArray(inputType, utils.possibleTypes) === -1) {
 				inputType = 'text';
 			}
-			this.$inputDiv = $("<div></div>").attr('data-editable-div', '').addClass(this.options.mode).addClass(inputType).addClass('editable-input-div').addClass(this.options.inputClass);
+			this.$inputDiv = $("<div></div>").attr('data-editable-div', this.$element.attr('id')).addClass(this.options.mode).addClass(inputType).addClass('editable-input-div').addClass(this.options.inputClass);
 			this.$input = null;
 			if (inputType == 'textarea') {
 				this.$input = $('<textarea></textarea>');
@@ -880,7 +879,7 @@
 			} else if (inputType == 'autocomplete') {
 				this.$input = $('<input></input>').attr('type', 'text');
 				var autocompleteSettings = $.extend({}, this.options.typeSettings);
-				var classToAdd = "editable-autocomplete-list editable-autocomplete-" + this.options.mode;
+				var classToAdd = "js-editable-no-submit editable-autocomplete-list editable-autocomplete-" + this.options.mode;
 				// below code adds editable-autocomplete-list to the classes settings, if possible, without overwriting any current data
 				if (typeof autocompleteSettings["classes"] === 'undefined') {
 					autocompleteSettings["classes"] = {
