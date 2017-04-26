@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.22.87";
+		$.betterEditableData.version = "0.22.88";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -1796,15 +1796,15 @@
 			if (typeof ajaxObj["success"] === 'undefined') {
 				ajaxObj["success"] = function (data) {
 					self.options.onAjaxSuccess(data, self);
-					if (self.state.doTab !== false) {
-						--$.betterEditableData.submitting;
-						self.triggerTabbing(self.state.doTab);
-					}
 					self.$element.trigger("be.ajaxSuccess", {
 						response: data,
 						editable: self,
 						oldValue: oldValue
 					});
+					if (self.state.doTab !== false) {
+						--$.betterEditableData.submitting;
+						self.triggerTabbing(self.state.doTab);
+					}
 					self.afterProcess();
 					if ($.betterEditableData.asyncRequests) {
 						$.betterEditableData.functions.requestExecutionEnd();
@@ -1817,9 +1817,6 @@
 					var errorValue = self.getValue();
 					self.setValue(oldValue);
 					self.options.onAjaxError(errorObj, xhr, settings, exception, errorValue, self);
-					if (self.state.doTab !== false) {
-						--$.betterEditableData.submitting;
-					}
 					self.$element.trigger("be.ajaxError", {
 						errorObj: errorObj,
 						xhr: xhr,
@@ -1828,6 +1825,9 @@
 						errorValue: errorValue,
 						editable: self
 					});
+					if (self.state.doTab !== false) {
+						--$.betterEditableData.submitting;
+					}
 					self.afterProcess();
 					if ($.betterEditableData.asyncRequests) {
 						$.betterEditableData.functions.requestExecutionEnd();
