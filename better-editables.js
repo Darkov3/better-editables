@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.22.88";
+		$.betterEditableData.version = "0.22.89";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -1431,8 +1431,14 @@
 			}
 			if (type === 'datetimepicker') {
 				if (typeof value1 === 'object') {
+					if (typeof value2 === 'string' && !isNaN(Date.parse(new Date(value2)))) {
+						value2 = new Date(value2);
+					}
 					return value1.isSame(value2);
 				} else if (typeof value2 === 'object') {
+					if (typeof value1 === 'string' && !isNaN(Date.parse(new Date(value1)))) {
+						value1 = new Date(value1);
+					}
 					return value2.isSame(value1);
 				}
 			} else if (type === 'multifield' && utils.isArray(value1) && utils.isArray(value2)) {
