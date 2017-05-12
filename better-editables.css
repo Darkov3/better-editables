@@ -145,6 +145,8 @@
 }
 
 .editable-clear-button {
+	padding: 0;
+	border-width: 0;
 	position: absolute;
 	opacity: 0.6;
 	z-index: 100;
@@ -166,9 +168,17 @@
 	user-select: none;			/* Chrome and Opera */
 }
 
+	.editable-clear-button:focus {
+		outline: none;
+	}
+
 .editable-input-div.number .editable-clear-button,
 .editable-input-div.textarea .editable-clear-button {
 	right: 18px;
+}
+
+.editable-input-div.password.ie-browser .editable-clear-button {
+	right: 22px;
 }
 
 	.editable-input-div.multifield .editable-clear-button {
@@ -205,6 +215,8 @@
 	}
 
 .editable-button {
+	padding: 0;
+	border-width: 0;
 	font-size: 15px;
 	width: 18px;
 	height: 18px;
@@ -225,6 +237,10 @@
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
 	margin-left: 5px;
 }
+
+	.editable-button:focus {
+		outline: none;
+	}
 
 	.editable-input-div.multifield .editable-button-wrapper .editable-button:first-of-type,
 	.editable-input-div.popup .editable-button-wrapper .editable-button:first-of-type {
