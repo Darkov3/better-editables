@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.26.62
+Highly Customizable JavaScript Editables v0.27.62
 
 Demo:
 https://darkov3.github.io/
@@ -14,7 +14,6 @@ Improvements:
 - add password view for non-ie browsers in password fields
 
 Features:
-- add typeahead type <- priority
 - add radio buttons type <- priority
 - add select2 type <- priority
 - add tinyMCE type <- priority

@@ -273,3 +273,31 @@
 .editable-multifield-wrapper .editable-multifield-input-wrapper:last-of-type {
 	margin-bottom: 0;
 }
+
+.editable-typeahead-wrapper {
+	display: inline-block;
+}
+
+	.editable-typeahead-wrapper .typeahead__container {
+		font: inherit;
+	}
+
+	.editable-typeahead-wrapper .typeahead__field,
+	.editable-typeahead-wrapper .typeahead__query {
+		font-size: inherit;
+		display: inline-block;
+	}
+
+	.editable-typeahead-wrapper input.js-typeahead {
+		padding: 2px 0;
+		height: inherit;
+	}
+
+	.editable-typeahead-wrapper .typeahead__query .typeahead__cancel-button {
+		top: 5px;
+		right: .4em;
+	}
+
+	.editable-typeahead-wrapper .typeahead__list {
+		z-index: 10000;
+	}

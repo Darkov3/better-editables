@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.26.62";
+		$.betterEditableData.version = "0.27.62";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -140,7 +140,8 @@
 				'inputmask',
 				'datetimepicker',
 				'autocomplete',
-				'multifield'
+				'multifield',
+				'typeahead'
 			],
 			// these are the text types
 			textTypes: [
@@ -1058,6 +1059,21 @@
 						self.$input.append($fieldWrapper);
 					});
 				}
+			} else if (inputType == 'typeahead') {
+				this.$input = $('<div></div>').addClass('editable-typeahead-wrapper');
+				var $tform = $('<form></form>');
+				var $tcontainer = $('<div></div>').addClass('typeahead__container');
+				var $tfield = $('<div></div>').addClass('typeahead__field');
+				var $tinput = $('<input></input>').addClass('js-typeahead').attr('name', 'q').attr('type', 'text').attr('autocomplete', 'off');
+				$tfield.append($('<span></span>').addClass('typeahead__query').append($tinput));
+				$tcontainer.append($tfield);
+				$tform.append($tcontainer);
+				this.$input.append($tform);
+				if (typeof this.options.typeSettings === 'object' && this.options.typeSettings !== null) {
+					// set the clear button option to the editable option
+					this.options.typeSettings['cancelButton'] = this.options.clearButton;
+				}
+				$tinput.typeahead(this.options.typeSettings);
 			} else {
 				this.$input = $('<input></input>').attr('type', inputType);
 			}
@@ -1187,7 +1203,7 @@
 			this.$inputDiv.append($inputWrapper);
 
 			// create clear button to clear the input value, if enabled and correct type and its not IE: IE has its own clear button
-			if (inputType != 'select' && inputType != 'datetimepicker' && this.options.clearButton === true &&
+			if (this.options.clearButton === true && inputType != 'select' && inputType != 'datetimepicker' && inputType != 'typeahead' && 
 				(ieVersion === 0 || inputType == 'textarea' || inputType == 'password')) {
 				var $clearButton = $("<button></button>").addClass('editable-clear-button').text('✖');
 				// multifield has special clear function
@@ -1496,6 +1512,9 @@
 						$focusWrapper = $focusWrapper.next();
 					}
 				}
+			} else if (this.options.type == 'typeahead') {
+				// find the typeahead input and focus
+				this.$input.find('input').focus();
 			} else {
 				// default focus
 				this.$input.focus();
@@ -1647,6 +1666,8 @@
 						}
 					});
 				}
+			} else if (this.options.type == 'typeahead') {
+				this.$input.find('input').val(newValue);
 			} else {
 				this.$input.val(newValue);
 			}
@@ -1692,6 +1713,8 @@
 						}
 					}
 				});
+			} else if (this.options.type == 'typeahead') {
+				returnValue = this.$input.find('input').val();
 			}
 			return returnValue;
 		};
@@ -1711,6 +1734,9 @@
 				this.$input.find('textarea').each(function () {
 					$(this).val('');
 				});
+			} else if (this.options.type == 'typeahead') {
+				// typeahead clear
+				this.$input.find('input').val('');
 			} else {
 				// default clear
 				this.$input.val('');
