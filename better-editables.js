@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.27.62";
+		$.betterEditableData.version = "0.27.63";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -447,10 +447,31 @@
 					return name + " is required!";
 				},
 				validator: function (value, validatorValue, $element) {
+					function requiredIfCheck(desiredValue, dependentPropertyId) {
+						desiredValue = $.trim(String(typeof desiredValue === 'undefined' || desiredValue == null ? '' : desiredValue)).toLowerCase();
+						var tagName = $('#' + dependentPropertyId).get(0).tagName.toLowerCase();
+						if (typeof $('#' + dependentPropertyId).get(0) !== 'undefined' && tagName !== 'input' && tagName !== 'textarea') {
+							return desiredValue === $.trim($('#' + dependentPropertyId).text()).toLowerCase();
+						}
+						var controlType = $("input[id$='" + dependentPropertyId + "']").attr("type");
+
+						var actualValue = {};
+						if (controlType == "radio") {
+							var control = $("input[id$='" + dependentPropertyId + "']:checked");
+							actualValue = control.val();
+						} else if (controlType == "checkbox") {
+							actualValue = $("input[id$='" + dependentPropertyId + "']").is(":checked");
+						} else {
+							actualValue = $("#" + dependentPropertyId).val();
+						}
+
+						return desiredValue === $.trim(actualValue).toLowerCase();
+					}
+
 					var required;
 					var defaultDesiredValue = validatorValue;
 					if (typeof $element.data("requiredif-dependentpropertyid") !== 'undefined') {
-						required = RequiredIf(defaultDesiredValue, $element.data("requiredif-dependentpropertyid"));
+						required = requiredIfCheck(defaultDesiredValue, $element.data("requiredif-dependentpropertyid"));
 					} else {
 						var index = 0;
 						var desiredValue;
@@ -459,7 +480,7 @@
 							if (typeof desiredValue === 'undefined' || desiredValue === null) {
 								desiredValue = defaultDesiredValue;
 							}
-							required = RequiredIf(desiredValue, $element.data("requiredif-dependentpropertyid-" + index));
+							required = requiredIfCheck(desiredValue, $element.data("requiredif-dependentpropertyid-" + index));
 							if (required && !$.betterEditableData.validators.required.validator(value, validatorValue, $element)) {
 								return false;
 							}
