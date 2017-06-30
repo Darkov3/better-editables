@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.27.63
+Highly Customizable JavaScript Editables v0.29.63
 
 Demo:
 https://darkov3.github.io/
@@ -23,7 +23,6 @@ Features:
 - add validators option
 - add options to change button text
 - add animation capabilities on show/hide/value change
-- add send: true/false option
 - add submit success class
 - add trigger display method
 - add normal and empty value display function option

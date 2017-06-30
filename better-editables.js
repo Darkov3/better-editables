@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.27.63";
+		$.betterEditableData.version = "0.29.63";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -125,7 +125,8 @@
 				'clearButton',
 				'buttonsOn',
 				'tabbingOn',
-				'readOnly'
+				'readOnly',
+				'send'
 			],
 			// these are the currently possible types
 			possibleTypes: [
@@ -405,6 +406,14 @@
 						return false;
 					}
 					return true;
+				}
+			},
+			mustbedigit: {
+				errorMsg: function (name, validatorValue, $element) {
+					return name + " must be a digit!";
+				},
+				validator: function (value, validatorValue, $element) {
+					return /^(-|\+){0,1}\d+$/.test(String(value));
 				}
 			},
 			email: {
@@ -765,6 +774,7 @@
 			this.options.placement = setIfDefined([this.$element.data('placement'), settings.placement, "right"]);
 			this.options.type = setIfDefined([this.$element.data('type'), this.$element.attr('type'), settings.type, "text"]);
 			this.options.typeSettings = setIfDefined([this.$element.data('type-settings'), settings.typeSettings]);
+			this.options.send = setIfDefined([this.$element.data('send'), settings.send, true], true);
 			this.options.ajaxObject = settings.ajaxObject;
 			this.options.ajaxParams = settings.ajaxParams;
 			if (typeof this.options.ajaxParams === 'undefined') {
@@ -1999,8 +2009,8 @@
 				};
 			}
 
-			// only submit if url is defined
-			if (typeof ajaxObj["url"] === 'string' && ajaxObj["url"] !== '') {
+			// only submit if url is defined and if send is turned on
+			if (this.options.send === true && typeof ajaxObj["url"] === 'string' && ajaxObj["url"] !== '') {
 				// handle async requests
 				if ($.betterEditableData.asyncRequests) {
 					ajaxObj["editable_option_doTab"] = this.state.doTab;
