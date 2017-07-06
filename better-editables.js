@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.29.63";
+		$.betterEditableData.version = "0.29.64";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -1879,7 +1879,7 @@
 		// processed data is only send to server, but not saved, by default
 		BetterEditable.prototype.processSubmitData = function (submitData) {
 			if (this.options.type === 'datetimepicker') {
-				if (submitData !== null) {
+				if (submitData !== null && typeof submitData.format === 'function') {
 					submitData = submitData.format(this.$input.data('DateTimePicker').format());
 				}
 			} else if (this.options.type === 'multifield' && utils.isArray(submitData)) {
