@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.29.64";
+		$.betterEditableData.version = "0.30.64";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -414,6 +414,22 @@
 				},
 				validator: function (value, validatorValue, $element) {
 					return /^(-|\+){0,1}\d+$/.test(String(value));
+				}
+			},
+			validatestep: {
+				errorMsg: function (name, validatorValue, $element) {
+					if (Number(validatorValue) == 0) {
+						validatorValue = 1;
+					}
+					return name + " must be a step of " + validatorValue + "!";
+				},
+				validator: function (value, validatorValue, $element) {
+					if (Number(validatorValue) == 0) {
+						validatorValue = 1;
+					}
+					var result = Number(value) / Number(validatorValue);
+					result = Math.round(result * 100) / 100;
+					return -1 === String(result).indexOf('.');
 				}
 			},
 			email: {
