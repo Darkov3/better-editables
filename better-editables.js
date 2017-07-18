@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.30.64";
+		$.betterEditableData.version = "0.30.86";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -408,9 +408,9 @@
 					return true;
 				}
 			},
-			mustbedigit: {
+			mustbeinteger: {
 				errorMsg: function (name, validatorValue, $element) {
-					return name + " must be a digit!";
+					return name + " must be an integer!";
 				},
 				validator: function (value, validatorValue, $element) {
 					return /^(-|\+){0,1}\d+$/.test(String(value));
@@ -780,7 +780,7 @@
 			this.options.displayFunction = setIfDefined([settings.displayFunction, function (editable, value) {
 				return $.betterEditableData.default.displayFunction(editable, value);
 			}]);
-			this.options.fieldName = setIfDefined([this.$element.data('name'), settings.fieldName, this.$element.attr('name'), this.$element.attr('title'), this.$element.attr('id')]);
+			this.options.fieldName = setIfDefined([this.$element.data('name'), settings.fieldName, this.$element.attr('name'), this.$element.data('title'), this.$element.attr('title'), this.$element.attr('id')]);
 			this.options.pk = setIfDefined([this.$element.data('pk'), settings.pk]);
 			this.options.toggle = setIfDefined([this.$element.data('toggle'), settings.toggle, 'click']);
 			this.options.mode = setIfDefined([this.$element.data('mode'), settings.mode]);
@@ -1288,6 +1288,9 @@
 					this.$input.on('dp.hide', function () {
 						self.cancel();
 					});
+				}
+				if (typeof this.$element.data('format') !== 'undefined' && typeof dateTimeSettings['format'] === 'undefined') {
+					dateTimeSettings['format'] = this.$element.data('format');
 				}
 				// warning: if hideInput is set to true, tabbing will be skipped when reaching this element
 				if (typeof dateTimeSettings['hideInput'] !== 'undefined') {
@@ -1895,8 +1898,12 @@
 		// processed data is only send to server, but not saved, by default
 		BetterEditable.prototype.processSubmitData = function (submitData) {
 			if (this.options.type === 'datetimepicker') {
-				if (submitData !== null && typeof submitData.format === 'function') {
-					submitData = submitData.format(this.$input.data('DateTimePicker').format());
+				if (submitData !== null) {
+					if (typeof submitData.format !== 'function') {
+						submitData = utils.formatNewDate(this.$input.data('DateTimePicker'), submitData)
+					} else {
+						submitData = submitData.format(this.$input.data('DateTimePicker').format());
+					}
 				}
 			} else if (this.options.type === 'multifield' && utils.isArray(submitData)) {
 				if (submitData.length === 0) {
