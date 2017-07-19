@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.30.86";
+		$.betterEditableData.version = "0.31.98";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -541,6 +541,12 @@
 			},
 			getValue: function (editable) {
 				return editable.getValue();
+			},
+			getProcessedValue: function (editable, dataToProcess) {
+				if (typeof dataToProcess === 'undefined') {
+					dataToProcess = editable.getValue();
+				}
+				return editable.processSubmitData(dataToProcess);
 			},
 			setValue: function (editable, newValue) {
 				editable.setValue(newValue);
@@ -1605,17 +1611,7 @@
 				}
 			}
 			if (type === 'datetimepicker') {
-				if (typeof value1 === 'object') {
-					if (typeof value2 === 'string' && !isNaN(Date.parse(new Date(value2)))) {
-						value2 = new Date(value2);
-					}
-					return value1.isSame(value2);
-				} else if (typeof value2 === 'object') {
-					if (typeof value1 === 'string' && !isNaN(Date.parse(new Date(value1)))) {
-						value1 = new Date(value1);
-					}
-					return value2.isSame(value1);
-				}
+				return (new Date(value1)).getTime() === (new Date(value2)).getTime();
 			} else if (type === 'multifield' && utils.isArray(value1) && utils.isArray(value2)) {
 				if (value1.length !== value2.length) {
 					return false;
@@ -1647,6 +1643,10 @@
 			} else if (this.options.type == 'number') {
 				// convert value to number type, if type is number
 				newValue = utils.normalizeNumber(newValue);
+			} else if (this.options.type == 'datetimepicker') {
+				// convert value to дате type, if type is datetimepicker
+				this.$input.data("DateTimePicker").date(newValue);
+				newValue = this.$input.data("DateTimePicker").date();
 			} else if ($.inArray(this.options.type, utils.textTypes) !== -1) {
 				// convert value to string type, if type is text
 				newValue = utils.normalizeString(newValue);
@@ -1667,7 +1667,7 @@
 		BetterEditable.prototype.getValue = function () {
 			if (typeof this.value === 'object' && this.value !== null) {
 				if (this.options.type === 'datetimepicker') {
-					return this.value.clone();
+					return new Date(this.value);
 				} else if (this.options.type === 'multifield') {
 					return $.extend(true, [], this.value);
 				}
@@ -1684,7 +1684,7 @@
 				var dateObj = this.$input.data('DateTimePicker');
 				if (this.isEmpty()) {
 					this.$input.datetimepicker('clear');
-					newValue = '';
+					newValue = null;
 				} else {
 					if (isNaN(Date.parse(newValue))) {
 						dateObj.date(newValue);
@@ -1694,7 +1694,7 @@
 					if (dateObj.date() !== null) {
 						newValue = dateObj.date().format(this.$input.data('DateTimePicker').format());
 					} else {
-						newValue = '';
+						newValue = null;
 					}
 				}
 				this.$input.val(newValue);
@@ -1926,11 +1926,26 @@
 			var submitData = this.getInputValue();
 			var oldValue = this.getValue();
 			if (!this.isShown()) {
-				submitData = oldValue;
+				submitData = this.getValue();
 			}
 			this.setValue(submitData);
 			var self = this;
 
+			// copy the data
+			var unprocessedData;
+			if (typeof submitData === 'object') {
+				if (submitData === null) {
+					unprocessedData = null;
+				} else if (utils.isArray(submitData)) {
+					unprocessedData = [];
+					$.extend(true, unprocessedData, submitData);
+				} else {
+					unprocessedData = {};
+					$.extend(true, unprocessedData, submitData);
+				}
+			} else {
+				unprocessedData = submitData;
+			}
 			// process the data
 			submitData = this.processSubmitData(submitData);
 			// trigger before submit event
@@ -1940,7 +1955,8 @@
 			};
 			this.$element.trigger("be.beforeSubmit", {
 				editable: self,
-				returnData: returnData
+				returnData: returnData,
+				unprocessedData: unprocessedData
 			});
 			if (returnData.flag === false) {
 				// set back the value to the old value, since there is a pre-submit custom error
