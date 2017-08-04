@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.31.98";
+		$.betterEditableData.version = "0.31.99";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -1427,13 +1427,17 @@
 				var topPos = this.$element.offset()['top'];
 				var leftPos = this.$element.offset()['left'];
 				if (this.options.placement === 'bottom') {
-					topPos += 7;
+					var heightOffset = this.$element.outerHeight();
+					var widthOffset = this.$element.outerWidth();
+					topPos += 7 + heightOffset;
+					leftPos -= 7;
 				} else if (this.options.placement === 'top') {
 					var heightOffset = this.$element.outerHeight();
 					if (this.$inputDiv.children().first().outerHeight() > heightOffset) {
 						heightOffset = this.$inputDiv.children().first().outerHeight();
 					}
 					topPos -= heightOffset + 7;
+					leftPos -= 7;
 				} else if (this.options.placement === 'right') {
 					leftPos += this.$element.outerWidth() + 7;
 					topPos -= 7;
