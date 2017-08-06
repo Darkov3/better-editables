@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.33.00";
+		$.betterEditableData.version = "0.33.30";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -163,7 +163,9 @@
 				}
 				if (typeof value === 'undefined') {
 					value = editable.value;
-					if (editable.options.type == 'select') {
+					if (editable.options.type == 'password') {
+						value = editable.options.passwordDisplay(editable, value);
+					} else if (editable.options.type == 'select') {
 						value = editable.options.selectDisplay(editable, value);
 					} else if (editable.options.type == 'textarea') {
 						value = editable.options.textareaDisplay(editable, value);
@@ -279,6 +281,9 @@
 					return "False";
 				}
 			},
+			passwordDisplay: function (editable, value) {
+				return String(value).replace(new RegExp('.', 'g'), '*');
+			},
 			selectDisplay: function (editable, value) {
 				var dataSource = editable.options.typeSettings;
 				if (utils.isArray(dataSource)) {
@@ -299,9 +304,7 @@
 				return value;
 			},
 			textareaDisplay: function (editable, value) {
-				value = String(value);
-				var regex = new RegExp('(\r|\n|\r\n)', 'g');
-				return value.replace(regex, '<br/>');
+				return String(value).replace(new RegExp('\r|\n|\r\n', 'g'), '<br/>');
 			},
 			dateDisplay: function (editable, value) {
 				return utils.formatNewDate(editable.$input.data('DateTimePicker'), value);
@@ -836,6 +839,9 @@
 			this.options.boolDisplay = setIfDefined([settings.boolDisplay, function (editable, boolValue) {
 				return $.betterEditableData.default.boolDisplay(editable, boolValue);
 			}]);
+			this.options.passwordDisplay = setIfDefined([settings.passwordDisplay, function (editable, value) {
+				return $.betterEditableData.default.passwordDisplay(editable, value);
+			}]);
 			this.options.selectDisplay = setIfDefined([settings.selectDisplay, function (editable, value) {
 				return $.betterEditableData.default.selectDisplay(editable, value);
 			}]);
@@ -849,6 +855,7 @@
 				return $.betterEditableData.default.multifieldDisplay(editable, value);
 			}]);
 			this.options.clearButton = setIfDefined([this.$element.data('clear-button'), settings.clearButton, true], true);
+			this.options.viewPassword = setIfDefined([this.$element.data('view-password'), settings.viewPassword, true], true);
 			this.options.buttonsOn = setIfDefined([this.$element.data('buttons-on'), settings.buttonsOn, true], true);
 			this.options.inputClass = setIfDefined([this.$element.data('input-class'), settings.inputClass]);
 			this.options.buttonClass = setIfDefined([this.$element.data('button-class'), settings.buttonClass]);
@@ -1256,10 +1263,11 @@
 			}
 			this.$inputDiv.append($inputWrapper);
 
+			var $buttonWrapper = null;
 			// create clear button to clear the input value, if enabled and correct type and its not IE: IE has its own clear button
 			if (this.options.clearButton === true && inputType != 'select' && inputType != 'datetimepicker' && inputType != 'typeahead' && 
 				(ieVersion === 0 || inputType == 'textarea' || inputType == 'password')) {
-				var $clearButton = $("<button></button>").addClass('editable-clear-button').text('✖');
+				var $clearButton = $("<button></button>").addClass('editable-input-button').addClass('editable-clear-button').text('✖');
 				// multifield has special clear function
 				if (inputType == 'multifield') {
 					$clearButton.text('Clear').addClass('editable-button');
@@ -1270,12 +1278,31 @@
 					self.clearInputValue();
 					self.focus();
 				});
-				var $clearWrapper = $('<div></div>').addClass('editable-clear-wrapper');
-				$clearWrapper.append(this.$input);
-				$clearWrapper.append($clearButton);
-				$inputWrapper.append($clearWrapper);
-			} else {
+				$buttonWrapper = $('<div></div>').addClass('editable-input-button-wrapper');
+				$buttonWrapper.append(this.$input);
+				$buttonWrapper.append($clearButton);
+			}
+			// create password view button, if enabled. IE default password view is disabled by default with CSS, as it seems to be buggy
+			if (inputType == 'password' && this.options.viewPassword === true) {
+				var $passwordViewButton = $("<button></button>").addClass('editable-input-button').addClass('editable-password-button').text('?');
+				if ($buttonWrapper === null) {
+					$buttonWrapper = $('<div></div>').addClass('editable-input-button-wrapper');
+					$buttonWrapper.append(this.$input);
+				}
+				$passwordViewButton.on('mousedown', function () {
+					self.$input.attr('type', 'text');
+				});
+				$passwordViewButton.on('mouseup', function () {
+					self.$input.attr('type', 'password');
+					self.focus();
+				});
+				$buttonWrapper.append($passwordViewButton);
+			}
+			// append the button wrapper if it exists, or just the input. The input wrapper will contain the input if it exists
+			if ($buttonWrapper === null) {
 				$inputWrapper.append(this.$input);
+			} else {
+				$inputWrapper.append($buttonWrapper);
 			}
 			// must create the date picker object after the input has been appended, or it does not work
 			if (inputType == 'datetimepicker') {

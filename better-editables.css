@@ -267,12 +267,12 @@
 	float: left;
 }
 
-.editable-clear-wrapper {
+.editable-input-button-wrapper {
 	display: inline-block;
 	position: relative;
 }
 
-.editable-clear-button {
+.editable-input-button {
 	padding: 0;
 	border-width: 0;
 	position: absolute;
@@ -296,20 +296,32 @@
 	user-select: none;			/* Chrome and Opera */
 }
 
-	.editable-clear-button:focus {
+	.ie-browser .editable-input-button {
+		font-size: 10px;
+		margin-top: 4px;
+	}
+
+	.editable-input-button:focus {
 		outline: none;
 	}
 
-.editable-input-div.number .editable-clear-button,
-.editable-input-div.textarea .editable-clear-button {
+.editable-input-div.number .editable-input-button,
+.editable-input-div.textarea .editable-input-button {
 	right: 18px;
 }
 
-.editable-input-div.password.ie-browser .editable-clear-button {
+.editable-input-div.password .editable-input-button {
 	right: 22px;
 }
+	.editable-input-div.password .editable-input-button.editable-password-button {
+		right: 3px;
+	}
 
-	.editable-input-div.multifield .editable-clear-button {
+	.editable-input-div.password.ie-browser input::-ms-reveal {
+		display: none;
+	}
+
+	.editable-input-div.multifield .editable-input-button {
 		line-height: 14px;
 		padding: 2px;
 		float: left;

@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.33.00
+Highly Customizable JavaScript Editables v0.33.30
 
 Demo:
 https://darkov3.github.io/
@@ -8,10 +8,9 @@ https://darkov3.github.io/
 TODO:
 
 Bug Fixes:
-- multifield textarea should save(and preview) newlines
+none
 
 Improvements:
-- add password view for non-ie browsers in password fields
 - add radio button type in multifield
 
 Features:
