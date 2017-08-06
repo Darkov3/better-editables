@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.31.99";
+		$.betterEditableData.version = "0.33.00";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -794,6 +794,7 @@
 				this.options.mode = 'inline';
 			}
 			this.options.placement = setIfDefined([this.$element.data('placement'), settings.placement, "right"]);
+			this.options.placementAlign = setIfDefined([this.$element.data('placement-align'), settings.placementAlign, "center"]);
 			this.options.type = setIfDefined([this.$element.data('type'), this.$element.attr('type'), settings.type, "text"]);
 			this.options.typeSettings = setIfDefined([this.$element.data('type-settings'), settings.typeSettings]);
 			this.options.send = setIfDefined([this.$element.data('send'), settings.send, true], true);
@@ -1332,7 +1333,7 @@
 			}
 			// add popup div
 			if (this.options.mode == 'popup') {
-				var popupWrap = $('<div></div>').addClass('editable-popup-wrapper').addClass(this.options.placement);
+				var popupWrap = $('<div></div>').addClass('editable-popup-wrapper');
 				this.$inputDiv.wrapInner(popupWrap);
 			}
 			
@@ -1422,35 +1423,155 @@
 			this.setInputValue();
 			this.$inputDiv.show();
 			if (this.options.mode === 'popup') {
-				// move the popup so it doesn't appear on top of the editable element.
 				this.togglePopupOpen(true);
-				var topPos = this.$element.offset()['top'];
-				var leftPos = this.$element.offset()['left'];
-				if (this.options.placement === 'bottom') {
-					var heightOffset = this.$element.outerHeight();
-					var widthOffset = this.$element.outerWidth();
-					topPos += 7 + heightOffset;
-					leftPos -= 7;
-				} else if (this.options.placement === 'top') {
-					var heightOffset = this.$element.outerHeight();
-					if (this.$inputDiv.children().first().outerHeight() > heightOffset) {
-						heightOffset = this.$inputDiv.children().first().outerHeight();
+				var self = this;
+				var cycleNextAligment = function(currentPlacement, currentAlign) {
+					var nextAligment = {
+						placement: currentPlacement,
+						placementAlign: currentAlign
+					};
+					var switchPlacement = false;
+					if (currentAlign == "top") {
+						nextAligment.placementAlign = "center";
+					} else if (currentAlign == "center") {
+						if (currentPlacement == "left" || currentPlacement == "right") {
+							nextAligment.placementAlign = "bottom";
+						} else {
+							nextAligment.placementAlign = "right";
+						}
+					} else if (currentAlign == "left") {
+						nextAligment.placementAlign = "center";
+					} else if (currentAlign == "bottom") {
+						nextAligment.placementAlign = "top";
+						switchPlacement = true;
+					} else if (currentAlign == "right") {
+						nextAligment.placementAlign = "left";
+						switchPlacement = true;
 					}
-					topPos -= heightOffset + 7;
-					leftPos -= 7;
-				} else if (this.options.placement === 'right') {
-					leftPos += this.$element.outerWidth() + 7;
-					topPos -= 7;
-				} else if (this.options.placement === 'left') {
-					var widthOffset = this.$element.outerWidth();
-					if (this.$inputDiv.children().first().outerWidth() > widthOffset) {
-						widthOffset = this.$inputDiv.children().first().outerWidth();
+					if (switchPlacement) {
+						switch (currentPlacement) {
+							case "top":
+								nextAligment.placement = "right";
+								break;
+							case "right":
+								nextAligment.placement = "bottom";
+								break;
+							case "bottom":
+								nextAligment.placement = "left";
+								break;
+							case "left":
+								nextAligment.placement = "top";
+								break;
+						}
 					}
-					leftPos -= widthOffset + 7;
-					topPos -= 7;
+					return nextAligment;
 				}
-				this.$inputDiv.css('top', topPos + 'px');
-				this.$inputDiv.css('left', leftPos + 'px');
+				var tryAligmentConfiguration = function(placement, align, numberOfTries) {
+					var topPos = self.$element.offset()['top'];
+					var leftPos = self.$element.offset()['left'];
+					if (placement === 'bottom') {
+						var heightOffset = self.$element.outerHeight();
+						var widthOffset = self.$element.outerWidth();
+						var popupWidthOffset = self.$inputDiv.find('.editable-popup-wrapper').outerWidth();
+						topPos += 7 + heightOffset;
+						switch (align) {
+							case "center":
+								leftPos -= popupWidthOffset / 2 - widthOffset / 2;
+								break;
+							case "top":
+								align = "left";
+							case "left":
+								leftPos -= 7;
+								break;
+							case "bottom":
+								align = "right";
+							case "right":
+								leftPos -= popupWidthOffset - 21;
+								break;
+						}
+					} else if (placement === 'top') {
+						var heightOffset = self.$element.outerHeight();
+						if (self.$inputDiv.children().first().outerHeight() > heightOffset) {
+							heightOffset = self.$inputDiv.children().first().outerHeight();
+						}
+						var widthOffset = self.$element.outerWidth();
+						var popupWidthOffset = self.$inputDiv.find('.editable-popup-wrapper').outerWidth();
+						topPos -= heightOffset + 7;
+						switch (align) {
+							case "center":
+								leftPos -= popupWidthOffset / 2 - widthOffset / 2;
+								break;
+							case "top":
+								align = "left";
+							case "left":
+								leftPos -= 7;
+								break;
+							case "bottom":
+								align = "right";
+							case "right":
+								leftPos -= popupWidthOffset - 21;
+								break;
+						}
+					} else if (placement === 'right') {
+						leftPos += self.$element.outerWidth() + 7;
+						var popupHeightOffset = self.$inputDiv.find('.editable-popup-wrapper').outerHeight();
+						var heightOffset = self.$element.outerHeight();
+						switch (align) {
+							case "center":
+								topPos -= popupHeightOffset / 2 - heightOffset / 2;
+								break;
+							case "left":
+								align = "top";
+							case "top":
+								topPos -= 7;
+								break;
+							case "right":
+								align = "bottom";
+							case "bottom":
+								topPos -= popupHeightOffset - 21;
+								break;
+						}
+					} else if (placement === 'left') {
+						var widthOffset = self.$element.outerWidth();
+						if (self.$inputDiv.children().first().outerWidth() > widthOffset) {
+							widthOffset = self.$inputDiv.children().first().outerWidth();
+						}
+						var popupHeightOffset = self.$inputDiv.find('.editable-popup-wrapper').outerHeight();
+						var heightOffset = self.$element.outerHeight();
+						leftPos -= widthOffset + 7;
+						switch (align) {
+							case "center":
+								topPos -= popupHeightOffset / 2 - heightOffset / 2;
+								break;
+							case "left":
+								align = "top";
+							case "top":
+								topPos -= 7;
+								break;
+							case "right":
+								align = "bottom";
+							case "bottom":
+								topPos -= popupHeightOffset - 21;
+								break;
+						}
+					}
+					var $popUpWrapper = self.$inputDiv.find('.editable-popup-wrapper');
+					self.$inputDiv.css('top', topPos + 'px');
+					self.$inputDiv.css('left', leftPos + 'px');
+					$popUpWrapper.removeClass("center-align").removeClass("top-align").removeClass("bottom-align")
+									.removeClass("left-align").removeClass("right-align").addClass(align + "-align")
+									.removeClass("top").removeClass("right").removeClass("bottom").removeClass("left").addClass(placement);
+					if (numberOfTries < 13) {
+						var popUpHeight = $popUpWrapper.offset()['top'] + $popUpWrapper.outerHeight();
+						var popUpWidth = $popUpWrapper.offset()['left'] + $popUpWrapper.outerWidth();
+						if ($popUpWrapper.offset()['top'] < $(document).scrollTop() || $popUpWrapper.offset()['left'] < $(document).scrollLeft() ||
+							popUpHeight > $(document).scrollTop() + $(window).height() || popUpWidth > $(document).scrollLeft() + $(window).width()){
+							var newConfiguration = cycleNextAligment(placement, align);
+							tryAligmentConfiguration(newConfiguration.placement, newConfiguration.placementAlign, ++numberOfTries);
+						}
+					}
+				}
+				tryAligmentConfiguration(this.options.placement, this.options.placementAlign, 1);
 			}
 			this.focus(tabDirection);
 
