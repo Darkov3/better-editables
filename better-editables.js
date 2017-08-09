@@ -107,6 +107,54 @@
 				dateObj.date(currentDate);
 				return formatedString;
 			},
+			// fills a select element with values from a data source, or creates a radio button set
+			createHtmlFromData: function($element, dataSource, type) {
+				var name = "";
+				if (type == 'radio') {
+					name = dataSource.name;
+					dataSource = dataSource.data;
+				}
+				var createHtml = function(valueField, textField, type) {
+					switch (type) {
+						case "select":
+							$element.append($('<option>', {
+								value: valueField,
+								text: textField
+							}));
+							break;
+						case "radio":
+							var $newInput = $('<input></input>').attr('type', 'radio').attr('name', name).val(valueField)
+							var $labelElement = $('<label></label>').addClass('radiobox-type').text(textField);
+							$labelElement.append($newInput);
+							$element.append($labelElement);
+							break;
+					}
+				}
+				for (var index = 0; index < dataSource.length; ++index) {
+					if (typeof dataSource[index] === 'object') {
+						if (utils.isArray(dataSource[index])) {
+							if (dataSource[index].length >= 1) {
+								var valueField = dataSource[index][0];
+								var textField = valueField;
+								if (dataSource[index].length >= 2) {
+									textField = dataSource[index][1];
+								}
+								createHtml(valueField, textField, type);
+							}
+						} else {
+							var valueField = dataSource[index]["value"];
+							var textField = valueField;
+							if (typeof dataSource[index]["text"] !== 'undefined') {
+								textField = dataSource[index]["text"];
+							}
+							if (typeof valueField === 'undefined') {
+								valueField = textField;
+							}
+							createHtml(valueField, textField, type);
+						}
+					}
+				}
+			},
 			// these options require the input field to be recreated
 			requireRecreateInput: [
 				'submitOnBlur',
@@ -294,7 +342,7 @@
 									value = dataSource[index][1];
 									break;
 								}
-							} else if (dataSource[index]["value"] == value) {
+							} else if (dataSource[index]["value"] == value && typeof dataSource[index]["text"] !== 'undefined') {
 								value = dataSource[index]["text"];
 								break;
 							}
@@ -320,6 +368,7 @@
 						});
 					}
 					if (returnValue !== '') {
+						// remove comma and space at the end
 						returnValue = returnValue.slice(0, -2);
 					}
 					return returnValue;
@@ -986,23 +1035,7 @@
 				this.$input = $('<select></select>');
 				var dataSource = this.options.typeSettings;
 				if (utils.isArray(dataSource)) {
-					for (var index = 0; index < dataSource.length; ++index) {
-						if (typeof dataSource[index] === 'object') {
-							if (utils.isArray(dataSource[index])) {
-								if (dataSource[index].length >= 2) {
-									this.$input.append($('<option>', {
-										value: dataSource[index][0],
-										text: dataSource[index][1]
-									}));
-								}
-							} else {
-								this.$input.append($('<option>', {
-									value: dataSource[index]["value"],
-									text: dataSource[index]["text"]
-								}));
-							}
-						}
-					}
+					utils.createHtmlFromData(this.$input, dataSource, 'select');
 				}
 			} else if (inputType == 'bool') {
 				this.$input = $('<input></input>').attr('type', 'hidden');
@@ -1046,17 +1079,18 @@
 						var ftype = this.$element.data("input" + dataIndex + "-type");
 						var fval = this.$element.data("input" + dataIndex + "-value");
 						var flabel = this.$element.data("input" + dataIndex + "-label");
+						var foptions = this.$element.data("input" + dataIndex + "-options");
 						if (typeof fname === 'string') {
 							if (typeof ftype !== 'string') {
 								ftype = "text";
 							}
 							if (typeof fval === 'undefined') {
 								fval = "";
-								if (ftype === 'checkbox'){
-									fval = utils.normalizeBoolean(fval);
-								}
 							}
-							dataSource[fname] = [ftype, flabel, fval];
+							if (ftype === 'checkbox'){
+								fval = utils.normalizeBoolean(fval);
+							}
+							dataSource[fname] = [ftype, flabel, fval, foptions];
 							var objToAdd = {};
 							objToAdd[fname] = fval;
 							inputDataSource.push($.extend({}, objToAdd));
@@ -1069,36 +1103,18 @@
 					}
 				}
 				if (typeof dataSource === 'object' && !utils.isArray(dataSource)) {
-					Object.keys(dataSource).forEach(function (name) {
-						var fieldLabel = name;
-						var fieldName = name;
-						var fieldType = dataSource[name];
-						var fieldValue = undefined;
-						if (utils.isArray(fieldType)) {
-							if (fieldType.length === 0) {
-								throw "Empty array given as field type!";
-							} else if (fieldType.length === 1) {
-								fieldType = fieldType[0];
-								fieldLabel += ": ";
-							} else {
-								if (typeof fieldType[1] === 'string') {
-									fieldLabel = fieldType[1];
-								} else {
-									fieldLabel += ": ";
-								}
-								if (fieldType.length > 2) {
-									fieldValue = fieldType[2];
-								}
-								fieldType = fieldType[0];
-							}
-						} else {
-							fieldLabel += ": ";
-						}
+					var createField = function(fieldName, fieldLabel, fieldType, fieldValue, fieldOptions) {
 						var $fieldWrapper = $('<div></div>').addClass('editable-multifield-input-wrapper').addClass(fieldType + "-type");
 						var $newField;
 						var $labelElement;
 						if (fieldType === 'textarea') {
 							$newField = $('<textarea></textarea>').val(fieldValue);
+						} else if (fieldType === 'select') {
+							$newField = $('<select></select>');
+							if (utils.isArray(fieldOptions)) {
+								utils.createHtmlFromData($newField, fieldOptions, 'select');
+							}
+							$newField.val(fieldValue);
 						} else {
 							$newField = $('<input></input>').attr('type', fieldType);
 						}
@@ -1118,6 +1134,41 @@
 							$fieldWrapper.append($newField);
 						}
 						self.$input.append($fieldWrapper);
+					}
+					Object.keys(dataSource).forEach(function (name) {
+						if (typeof dataSource[name] !== 'object' || utils.isArray(dataSource[name])) {
+							var fieldName = name;
+							var fieldLabel = name;
+							var fieldType = dataSource[name];
+							var fieldValue = undefined;
+							var fieldOptions = undefined;
+							if (utils.isArray(fieldType)) {
+								if (fieldType.length === 0) {
+									throw "Empty array given as field type!";
+								} else if (fieldType.length === 1) {
+									fieldType = fieldType[0];
+									fieldLabel += ": ";
+								} else {
+									if (typeof fieldType[1] === 'string') {
+										fieldLabel = fieldType[1];
+									} else {
+										fieldLabel += ": ";
+									}
+									if (fieldType.length > 2) {
+										fieldValue = fieldType[2];
+									}
+									if (fieldType.length > 3) {
+										fieldOptions = fieldType[3];
+									}
+									fieldType = fieldType[0];
+								}
+							} else {
+								fieldLabel += ": ";
+							}
+							createField(fieldName, fieldLabel, fieldType, fieldValue, fieldOptions);
+						} else {
+							createField(name, dataSource[name].label, dataSource[name].type, dataSource[name].value, dataSource[name].options);
+						}
 					});
 				}
 			} else if (inputType == 'typeahead') {
