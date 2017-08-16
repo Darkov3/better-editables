@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.33.30";
+		$.betterEditableData.version = "0.33.50";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -125,7 +125,7 @@
 						case "radio":
 							var $newInput = $('<input></input>').attr('type', 'radio').attr('name', name).val(valueField)
 							var $labelElement = $('<label></label>').addClass('radiobox-type').text(textField);
-							$labelElement.append($newInput);
+							$labelElement.prepend($newInput);
 							$element.append($labelElement);
 							break;
 					}
@@ -1115,6 +1115,14 @@
 								utils.createHtmlFromData($newField, fieldOptions, 'select');
 							}
 							$newField.val(fieldValue);
+						} else if (fieldType === 'radio') {
+							$newField = $('<div></div>').addClass('editable-multifield-radio-wrapper').attr('data-multifield-radio', "");
+							if (utils.isArray(fieldOptions)) {
+								utils.createHtmlFromData($newField, {
+									name: fieldName,
+									data: fieldOptions
+								}, 'radio');
+							}
 						} else {
 							$newField = $('<input></input>').attr('type', fieldType);
 						}
@@ -1125,7 +1133,11 @@
 							$labelElement.append($newField).append(fieldLabel);
 							$fieldWrapper.append($labelElement);
 						} else {
-							$newField.val(fieldValue);
+							if (fieldType === 'radio') {
+								$('input[type="radio"][name="' + fieldName + '"][value="' + fieldValue + '"]').prop('checked', true);
+							} else {
+								$newField.val(fieldValue);
+							}
 							$labelElement = $('<div></div>').addClass('editable-multifield-label');
 							if (typeof fieldLabel === 'string' && fieldLabel.trim() !== '' && fieldType !== 'hidden') {
 								$labelElement.text(fieldLabel);
@@ -1822,7 +1834,8 @@
 				for (var index = 0; index < value1.length; ++index) {
 					var notEqual = false;
 					Object.keys(value1[index]).forEach(function (name) {
-						if (value1[index][name] !== value2[index][name]) {
+						// checks for !notEqual to speed up the process if notEqual is already set, as break cant be done in forEach:
+						if (!notEqual && value1[index][name] !== value2[index][name]) {
 							notEqual = true;
 						}
 					});
@@ -1905,7 +1918,7 @@
 				for (var index = 0; index < newValue.length; ++index) {
 					Object.keys(newValue[index]).forEach(function (name) {
 						var $field = self.$input.find('input[name="' + name + '"]').first();
-						if ($field.length > 0) {
+						if ($field.length > 0 && $field.attr('type') != 'radio') {
 							if ($field.attr('type') === 'checkbox') {
 								$field.prop('checked', utils.normalizeBoolean(newValue[index][name]));
 							} else {
@@ -1915,6 +1928,16 @@
 							$field = self.$input.find('textarea[name="' + name + '"]').first();
 							if ($field.length > 0) {
 								$field.val(newValue[index][name]);
+							} else {
+								$field = self.$input.find('select[name="' + name + '"]').first();
+								if ($field.length > 0) {
+									$field.val(newValue[index][name]);
+								} else {
+									$field = self.$input.find('[data-multifield-radio][name="' + name + '"] input[type="radio"][name="' + name + '"][value="' + newValue[index][name] + '"]').first();
+									if ($field.length > 0) {
+										$field.prop('checked', true);
+									}
+								}
 							}
 						}
 					});
@@ -1949,14 +1972,29 @@
 				var inputValue = '';
 				this.$input.children().each(function() {
 					var $innerInput = $(this).find('input');
-					if ($innerInput.length === 0) {
+					if ($innerInput.length !== 1) {
 						$innerInput = $(this).find('textarea');
+					}
+					if ($innerInput.length !== 1) {
+						$innerInput = $(this).find('select');
+					}
+					if ($innerInput.length !== 1) {
+						$innerInput = $(this).find('[data-multifield-radio]');
+						if ($innerInput.length === 1) {
+							var radioGroupName = $innerInput.attr('name');
+							$innerInput = $(this).find('input[type="radio"][name="' + radioGroupName + '"]:checked');
+							if ($innerInput.length === 0) {
+								$innerInput = $(this).find('input[type="radio"][name="' + radioGroupName + '"]').first();
+							}
+						}
 					}
 					if ($innerInput.length === 1) {
 						inputName = $innerInput.attr('name');
 						if (typeof inputName === 'string' && inputName.trim() !== '') {
 							if ($innerInput.attr('type') == 'checkbox') {
 								inputValue = $innerInput[0].checked;
+							} else if ($innerInput.attr('type') == 'radio' && !$innerInput.is(':checked')) {
+								inputValue = null;
 							} else {
 								inputValue = $innerInput.val();
 							}

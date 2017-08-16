@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.33.30
+Highly Customizable JavaScript Editables v0.33.50
 
 Demo:
 https://darkov3.github.io/
@@ -8,10 +8,10 @@ https://darkov3.github.io/
 TODO:
 
 Bug Fixes:
-none
+- none
 
 Improvements:
-- add radio button type in multifield
+- none
 
 Features:
 - add radio buttons type <- priority
@@ -27,4 +27,3 @@ Features:
 - add trigger display method
 - add normal and empty value display function option
 - add canSubmit check function
-- add checkbox type

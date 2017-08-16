@@ -410,6 +410,11 @@
 			margin: 0;
 		}
 
+	.editable-multifield-input-wrapper .radiobox-type {
+		cursor: pointer;
+		display: block;
+	}
+
 .editable-multifield-wrapper .editable-multifield-input-wrapper:last-of-type {
 	margin-bottom: 0;
 }
