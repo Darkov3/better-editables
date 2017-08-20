@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.33.50";
+		$.betterEditableData.version = "0.34.72";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -190,7 +190,8 @@
 				'datetimepicker',
 				'autocomplete',
 				'multifield',
-				'typeahead'
+				'typeahead',
+				'radio'
 			],
 			// these are the text types
 			textTypes: [
@@ -199,6 +200,11 @@
 				'tel',
 				'email',
 				'textarea'
+			],
+			// these types have no default clear button
+			noClearButtonTypes: [
+				'datetimepicker', 
+				'typeahead'
 			]
 		};
 		var utils = $.betterEditableData.utils;
@@ -223,6 +229,8 @@
 						value = editable.options.dateDisplay(editable, value);
 					} else if (editable.options.type == 'multifield') {
 						value = editable.options.multifieldDisplay(editable, value);
+					} else if (editable.options.type == 'radio') {
+						value = editable.options.radioDisplay(editable, value);
 					}
 				}
 				editable.$element.html(value);
@@ -375,6 +383,15 @@
 				} else {
 					return '';
 				}
+			},
+			radioDisplay: function (editable, value) {
+				var dataSource;
+				if (utils.isArray(editable.options.typeSettings)) {
+					dataSource = editable.options.typeSetting;
+				} else {
+					dataSource = editable.options.typeSetting.data;
+				}
+				return editable.options.selectDisplay(editable, value);
 			}
 		};
 
@@ -903,6 +920,9 @@
 			this.options.multifieldDisplay = setIfDefined([settings.multifieldDisplay, function (editable, value) {
 				return $.betterEditableData.default.multifieldDisplay(editable, value);
 			}]);
+			this.options.radioDisplay = setIfDefined([settings.radioDisplay, function (editable, value) {
+				return $.betterEditableData.default.radioDisplay(editable, value);
+			}]);
 			this.options.clearButton = setIfDefined([this.$element.data('clear-button'), settings.clearButton, true], true);
 			this.options.viewPassword = setIfDefined([this.$element.data('view-password'), settings.viewPassword, true], true);
 			this.options.buttonsOn = setIfDefined([this.$element.data('buttons-on'), settings.buttonsOn, true], true);
@@ -1037,6 +1057,16 @@
 				if (utils.isArray(dataSource)) {
 					utils.createHtmlFromData(this.$input, dataSource, 'select');
 				}
+			} else if (inputType == 'radio') {
+				this.$input = $('<div></div>').addClass('editable-radio-input-div');
+				var dataSource = this.options.typeSettings;
+				if (utils.isArray(dataSource)) {
+					dataSource = {
+						data: dataSource,
+						name: this.options.fieldName
+					}
+				}
+				utils.createHtmlFromData(this.$input, dataSource, 'radio');
 			} else if (inputType == 'bool') {
 				this.$input = $('<input></input>').attr('type', 'hidden');
 			} else if (inputType == 'inputmask') {
@@ -1254,25 +1284,56 @@
 						self.initiateSubmit();
 					}
 				};
+				// if type is radio and its only one input, we need to add a special keyevent for arrows(up/down) to make it possible to select the radio without the mouse
+				var handleLoneRadios = function ($element, searchInputs) {
+					if (searchInputs === true) {
+						var $radioArray = $element.find('input');
+						if ($radioArray.length === 1) {
+							$element = $radioArray.first();
+						} else {
+							return;
+						}
+					}
+
+					if ($element.is('[type="radio"]')) {
+						$element.on('keydown', function (event) {
+							if (event.which == 38 || event.which == 40) {
+								utils.preventDefault(event);
+								$(this).prop('checked', true);
+							}
+						});
+					}
+				};
+				if (this.options.type === 'radio') {
+					handleLoneRadios($eventTriggerer, true);
+				}
 				if (this.options.type === 'multifield') {
 					// if type is multifield, then only the last input will trigger tabbing events
 					// taking advantage that jquery always returns the elements in the order they are in the dom
-					var $inputArray = this.$input.find('input:not([type="hidden"]), textarea').toArray();
+					var $inputArray = this.$input.find('input:not([type="hidden"], [type="radio"]), textarea, select, [data-multifield-radio]').toArray();
+					this.$input.find('[data-multifield-radio]').each(function(){
+						handleLoneRadios($(this), true);
+					});
 					if ($inputArray.length > 0) {
 						var $lastTabElement = $($inputArray.pop());
 						if ($inputArray.length > 1) {
 							var $firstTabElement = $($inputArray.shift());
 							// if type is multifield, then every input(thats not hidden) can submit with Enter and cancel with ESC
 							$.each($inputArray, function (index, element) {
-								$(element).on('keydown', function (event) {
+								var multiInputOnKey = function (event) {
 									if (event.which == 27) {
 										onEscape(event);
 									} else if (event.which == 13) {
 										onEnter(event, true);
 									}
-								});
+								}
+								if (typeof $(element).data('multifield-radio') === 'undefined') {
+									$(element).on('keydown', multiInputOnKey);
+								} else {
+									$(element).find('input').on('keydown', multiInputOnKey);
+								}
 							});
-							$lastTabElement.on('keydown', function (event) {
+							var multiInputOnKeyLast = function (event) {
 								if (event.which == 27) {
 									onEscape(event);
 								} else if (event.which == 13) {
@@ -1281,8 +1342,13 @@
 								} else if (event.which == 9 && !event.shiftKey) {
 									onTab(event);
 								}
-							});
-							$firstTabElement.on('keydown', function (event) {
+							};
+							if (typeof $lastTabElement.data('multifield-radio') === 'undefined') {
+								$lastTabElement.on('keydown', multiInputOnKeyLast);
+							} else {
+								$lastTabElement.find('input').on('keydown', multiInputOnKeyLast);
+							}
+							var multiInputOnKeyFirst = function (event) {
 								if (event.which == 27) {
 									onEscape(event);
 								} else if (event.which == 13) {
@@ -1291,10 +1357,24 @@
 								} else if (event.which == 9 && event.shiftKey) {
 									onTab(event);
 								}
-							});
+							};
+							if (typeof $firstTabElement.data('multifield-radio') === 'undefined') {
+								$firstTabElement.on('keydown', multiInputOnKeyFirst);
+							} else {
+								$firstTabElement.find('input').on('keydown', multiInputOnKeyFirst);
+							}
 						} else {
-							// if there is one element, then treat it as default
-							$lastTabElement.on('keydown', function (event) {
+							// if its a radio type with one input, put the event on the proper element and treat it as default
+							var multipleForRadio = false;
+							if (typeof $lastTabElement.data('multifield-radio') !== 'undefined') {
+								if ($lastTabElement.find('input').length == 1) {
+									$lastTabElement.find('input').first();
+								} else {
+									multipleForRadio = true;
+								}
+							}
+							// if there is one element, then treat it as default, unless its a radio type with several inputs
+							var multiInputOnKeyOne = function (event) {
 								if (event.which == 27) {
 									onEscape(event);
 								} else if (event.which == 13) {
@@ -1302,7 +1382,13 @@
 								} else if (event.which == 9) { // tab pressed => trigger tabbing and submit, if enabled
 									onTab(event);
 								}
-							});
+							};
+							if (multipleForRadio) {
+								$lastTabElement.find('input').on('keydown', multiInputOnKeyOne);
+							} else {
+								$lastTabElement.on('keydown', multiInputOnKeyOne);
+								//handleLoneRadios($lastTabElement);
+							}
 						}
 					}
 				} else {
@@ -1327,12 +1413,12 @@
 			this.$inputDiv.append($inputWrapper);
 
 			var $buttonWrapper = null;
-			// create clear button to clear the input value, if enabled and correct type and its not IE: IE has its own clear button
-			if (this.options.clearButton === true && inputType != 'select' && inputType != 'datetimepicker' && inputType != 'typeahead' && 
+			// create clear button to clear the input value, if enabled and correct type and its not IE(with some exceptions): IE has its own clear button
+			if (this.options.clearButton === true && $.inArray(inputType, utils.noClearButtonTypes) === -1 && 
 				(ieVersion === 0 || inputType == 'textarea' || inputType == 'password')) {
-				var $clearButton = $("<button></button>").addClass('editable-input-button').addClass('editable-clear-button').text('✖');
-				// multifield has special clear function
-				if (inputType == 'multifield') {
+				var $clearButton = $("<button></button>").addClass('editable-input-button').addClass('editable-clear-button');
+				// special clear buttons
+				if (inputType == 'multifield' || inputType == 'select' || inputType == 'radio') {
 					$clearButton.text('Clear').addClass('editable-button');
 				} else {
 					$clearButton.text('✖');
@@ -1786,6 +1872,9 @@
 			} else if (this.options.type == 'typeahead') {
 				// find the typeahead input and focus
 				this.$input.find('input').focus();
+			} else if (this.options.type == 'radio') {
+				// radio focus
+				this.$input.find('input').first().focus();
 			} else {
 				// default focus
 				this.$input.focus();
@@ -1944,6 +2033,8 @@
 				}
 			} else if (this.options.type == 'typeahead') {
 				this.$input.find('input').val(newValue);
+			} else if (this.options.type == 'radio') {
+				this.$input.find('input[value="' + newValue + '"]').prop('checked', true);
 			} else {
 				this.$input.val(newValue);
 			}
@@ -2006,6 +2097,13 @@
 				});
 			} else if (this.options.type == 'typeahead') {
 				returnValue = this.$input.find('input').val();
+			} else if (this.options.type == 'radio') {
+				var $checkedInput = this.$input.find('input:checked');
+				if ($checkedInput.length === 0) {
+					returnValue = null;
+				} else {
+					returnValue = $checkedInput.val();
+				}
 			}
 			return returnValue;
 		};
@@ -2016,7 +2114,7 @@
 			} else if (this.options.type == 'multifield') {
 				// multifield clear: clear all inputs and uncheck checkboxes
 				this.$input.find('input').each(function () {
-					if ($(this).attr('type') == 'checkbox') {
+					if ($(this).attr('type') == 'checkbox' || $(this).attr('type') == 'radio') {
 						$(this).prop('checked', false);
 					} else {
 						$(this).val('');
@@ -2025,9 +2123,15 @@
 				this.$input.find('textarea').each(function () {
 					$(this).val('');
 				});
+				this.$input.find('select').each(function () {
+					$(this).val('');
+				});
 			} else if (this.options.type == 'typeahead') {
 				// typeahead clear
 				this.$input.find('input').val('');
+			} else if (this.options.type == 'radio') {
+				// radio clear
+				this.$input.find('input').prop('checked', false);
 			} else {
 				// default clear
 				this.$input.val('');

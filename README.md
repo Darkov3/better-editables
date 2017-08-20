@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.33.50
+Highly Customizable JavaScript Editables v0.34.72
 
 Demo:
 https://darkov3.github.io/
@@ -14,7 +14,6 @@ Improvements:
 - none
 
 Features:
-- add radio buttons type <- priority
 - add select2 type <- priority
 - add tinyMCE type <- priority
 - add documentation <- priority

@@ -321,7 +321,7 @@
 		display: none;
 	}
 
-	.editable-input-div.multifield .editable-input-button {
+	.editable-button.editable-input-button {
 		line-height: 14px;
 		padding: 2px;
 		float: left;
@@ -331,6 +331,19 @@
 	    margin-left: 0;
 	    opacity: 1;
 	}
+
+		.editable-input-div.select .editable-button.editable-input-button {
+			float: none;
+		}
+
+			.editable-input-div.select.inline .editable-button.editable-input-button {
+				margin-top: 0;
+				margin-left: 5px;
+			}
+
+			.editable-input-div.select.popup .editable-button.editable-input-button {
+				display: block;
+			}
 
 .editable-button-wrapper {
 	display: inline-block;
@@ -410,6 +423,7 @@
 			margin: 0;
 		}
 
+	.editable-radio-input-div .radiobox-type,
 	.editable-multifield-input-wrapper .radiobox-type {
 		cursor: pointer;
 		display: block;
