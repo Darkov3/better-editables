@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.34.72";
+		$.betterEditableData.version = "0.35.72";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -948,7 +948,7 @@
 			this.createInputField();
 			this.setValue(setIfDefined([this.$element.data('value'), settings.value, this.$element.attr('value'), this.$element.text()]));
 			this.setInputValue();
-			this.initializeValidators();
+			this.initializeValidators(settings.validators);
 			this.options.displayFunction(this);
 			if (settings.readOnly === true) {
 				this.toggleReadOnly(true);
@@ -1017,8 +1017,11 @@
 			this.$element.trigger("be.init", this);
 		}
 
-		BetterEditable.prototype.initializeValidators = function () {
+		BetterEditable.prototype.initializeValidators = function (importedValidators) {
 			this.validators = [];
+			if (utils.isArray(importedValidators)) {
+				$.extend(true, this.validators, importedValidators);
+			}
 
 			var data = this.$element.data();
 			for (var key in data) {

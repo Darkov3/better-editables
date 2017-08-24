@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.34.72
+Highly Customizable JavaScript Editables v0.35.72
 
 Demo:
 https://darkov3.github.io/
@@ -19,7 +19,6 @@ Features:
 - add documentation <- priority
 - add more code comments
 - add option to imitate a form submit(send FormData)
-- add validators option
 - add options to change button text
 - add animation capabilities on show/hide/value change
 - add submit success class
