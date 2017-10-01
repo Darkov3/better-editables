@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.35.72
+Highly Customizable JavaScript Editables v0.36.72
 
 Demo:
 https://darkov3.github.io/
@@ -21,7 +21,6 @@ Features:
 - add option to imitate a form submit(send FormData)
 - add options to change button text
 - add animation capabilities on show/hide/value change
-- add submit success class
 - add trigger display method
 - add normal and empty value display function option
 - add canSubmit check function

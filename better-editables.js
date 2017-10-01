@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.35.72";
+		$.betterEditableData.version = "0.36.72";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -2188,6 +2188,8 @@
 	{
 		BetterEditable.prototype.submitProcess = function () {
 			this.options.errorHandler('', this, false);
+			this.$element.removeClass('editable-submit-success');
+			this.$element.removeClass('editable-submit-error');
 			var result = this.validate();
 			if (!result) {
 				return true;
@@ -2366,7 +2368,7 @@
 						--$.betterEditableData.submitting;
 						self.triggerTabbing(self.state.doTab);
 					}
-					self.afterProcess();
+					self.afterProcess(true);
 					if ($.betterEditableData.asyncRequests) {
 						$.betterEditableData.functions.requestExecutionEnd();
 					}
@@ -2389,7 +2391,7 @@
 					if (self.state.doTab !== false) {
 						--$.betterEditableData.submitting;
 					}
-					self.afterProcess();
+					self.afterProcess(false);
 					if ($.betterEditableData.asyncRequests) {
 						$.betterEditableData.functions.requestExecutionEnd();
 					}
@@ -2415,14 +2417,19 @@
 				if (self.state.doTab !== false) {
 					self.triggerTabbing(self.state.doTab);
 				}
-				this.afterProcess();
+				this.afterProcess(true);
 			}
 
 			return false;
 		};
 
-		BetterEditable.prototype.afterProcess = function () {
+		BetterEditable.prototype.afterProcess = function (wasSuccess) {
 			this.resetState();
+			if (wasSuccess) {
+				this.$element.addClass('editable-submit-success');
+			} else {
+				this.$element.addClass('editable-submit-error');
+			}
 			return this;
 		};
 	}
