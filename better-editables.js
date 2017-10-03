@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.37.73";
+		$.betterEditableData.version = "0.38.84";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -1612,6 +1612,10 @@
 			return !this.$element.is(":visible") || this.options.type === 'bool' || 
 					(this.options.type === 'datetimepicker' && typeof this.options.typeSettings !== 'undefined' && this.options.typeSettings['hideInput'] === true);
 		};
+
+		BetterEditable.prototype.canSubmit = function (forceSubmit) {
+			return forceSubmit === true || this.options.submitNoChange === true || !this.compare();
+		};
 	}
 
 	// Main action scope
@@ -1805,7 +1809,7 @@
 				this.$input.val(newValue);
 			}
 
-			if (forceSubmit !== true && this.options.submitNoChange === false && this.compare()) {
+			if (!this.canSubmit(forceSubmit)) {
 				this.cancel();
 				if (this.state.doTab !== false) {
 					this.triggerTabbing(this.state.doTab);
@@ -2235,10 +2239,12 @@
 			return result;
 		};
 
-		BetterEditable.prototype.validate = function (triggerErrors) {
-			var newValue = this.getInputValue();
-			if (!this.isShown()) {
-				newValue = this.getValue();
+		BetterEditable.prototype.validate = function (triggerErrors, newValue) {
+			if (typeof newValue === 'undefined') {
+				newValue = this.getInputValue();
+				if (!this.isShown()) {
+					newValue = this.getValue();
+				}
 			}
 			var self = this;
 			// trigger before validate event
@@ -2433,7 +2439,7 @@
 				};
 			}
 
-			// only submit if url is defined and if send is turned on
+			// only ajax submit if url is defined and if send is turned on
 			if (this.options.send === true && typeof ajaxObj["url"] === 'string' && ajaxObj["url"] !== '') {
 				// handle async requests
 				if ($.betterEditableData.asyncRequests) {
