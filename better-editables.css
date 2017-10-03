@@ -332,15 +332,18 @@
 	    opacity: 1;
 	}
 
+		.editable-input-div.select2 .editable-button.editable-input-button, 
 		.editable-input-div.select .editable-button.editable-input-button {
 			float: none;
 		}
 
+			.editable-input-div.select2.inline .editable-button.editable-input-button, 
 			.editable-input-div.select.inline .editable-button.editable-input-button {
 				margin-top: 0;
 				margin-left: 5px;
 			}
-
+		
+			.editable-input-div.select2.popup .editable-button.editable-input-button, 
 			.editable-input-div.select.popup .editable-button.editable-input-button {
 				display: block;
 			}

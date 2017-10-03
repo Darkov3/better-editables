@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.36.72";
+		$.betterEditableData.version = "0.37.73";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -191,7 +191,8 @@
 				'autocomplete',
 				'multifield',
 				'typeahead',
-				'radio'
+				'radio',
+				'select2'
 			],
 			// these are the text types
 			textTypes: [
@@ -231,6 +232,8 @@
 						value = editable.options.multifieldDisplay(editable, value);
 					} else if (editable.options.type == 'radio') {
 						value = editable.options.radioDisplay(editable, value);
+					} else if (editable.options.type == 'select2') {
+						value = editable.options.select2Display(editable, value);
 					}
 				}
 				editable.$element.html(value);
@@ -392,6 +395,9 @@
 					dataSource = editable.options.typeSetting.data;
 				}
 				return editable.options.selectDisplay(editable, value);
+			},
+			select2Display: function (editable, value) {
+				return editable.$input.find(':selected').text().trim();
 			}
 		};
 
@@ -617,13 +623,19 @@
 				}
 				return editable.processSubmitData(dataToProcess);
 			},
-			setValue: function (editable, newValue) {
+			setValue: function (editable, newValue, changeInput) {
+				if (changeInput !== false) {
+					changeInput = true;
+				}
+				if (changeInput) {
+					editable.setInputValue(newValue);
+				}
 				editable.setValue(newValue);
 				editable.options.displayFunction(editable);
 				return editable.$element;
 			},
-			submit: function (editable) {
-				editable.setInputValue();
+			submit: function (editable, value) {
+				editable.setInputValue(value);
 				editable.initiateSubmit(undefined, true);
 				return editable.$element;
 			},
@@ -683,7 +695,7 @@
 			},
 			clear: function (editable) {
 				if (editable.isShown()) {
-					editable.clear();
+					editable.clearInputValue();
 				}
 				return editable.$element;
 			},
@@ -794,7 +806,7 @@
 		$.betterEditableData.requests = [];
 		
 		$.betterEditableData.functions = {
-			// when applyToAll is ran, it will automatically run betterEditable function to all html elements with data-editable, 
+			// when applyToAll is called, it will automatically run betterEditable function to all html elements with data-editable, 
 			// unless they have data-editable-no-init, with the given arguments.
 			// this can be used to initilize editables in the first place
 			applyToAll: function () {
@@ -922,6 +934,9 @@
 			}]);
 			this.options.radioDisplay = setIfDefined([settings.radioDisplay, function (editable, value) {
 				return $.betterEditableData.default.radioDisplay(editable, value);
+			}]);
+			this.options.select2Display = setIfDefined([settings.select2Display, function (editable, value) {
+				return $.betterEditableData.default.select2Display(editable, value);
 			}]);
 			this.options.clearButton = setIfDefined([this.$element.data('clear-button'), settings.clearButton, true], true);
 			this.options.viewPassword = setIfDefined([this.$element.data('view-password'), settings.viewPassword, true], true);
@@ -1231,6 +1246,14 @@
 					this.options.typeSettings['cancelButton'] = this.options.clearButton;
 				}
 				$tinput.typeahead(this.options.typeSettings);
+			} else if (inputType == 'select2') {
+				this.$input = $('<select></select>');
+				if (typeof this.options.typeSettings !== 'undefined') {
+					var dataSource = this.options.typeSettings.dataSource;
+					if (utils.isArray(dataSource)) {
+						utils.createHtmlFromData(this.$input, dataSource, 'select');
+					}
+				}
 			} else {
 				this.$input = $('<input></input>').attr('type', inputType);
 			}
@@ -1421,7 +1444,7 @@
 				(ieVersion === 0 || inputType == 'textarea' || inputType == 'password')) {
 				var $clearButton = $("<button></button>").addClass('editable-input-button').addClass('editable-clear-button');
 				// special clear buttons
-				if (inputType == 'multifield' || inputType == 'select' || inputType == 'radio') {
+				if (inputType == 'multifield' || inputType == 'select' || inputType == 'select2' || inputType == 'radio') {
 					$clearButton.text('Clear').addClass('editable-button');
 				} else {
 					$clearButton.text('✖');
@@ -1456,7 +1479,7 @@
 			} else {
 				$inputWrapper.append($buttonWrapper);
 			}
-			// must create the date picker object after the input has been appended, or it does not work
+			// must create these objects after the input has been appended, or they dont not work
 			if (inputType == 'datetimepicker') {
 				var dateTimeSettings = $.extend({}, this.options.typeSettings);
 				// debug is set to true, to make the picker not hide on blur
@@ -1494,6 +1517,12 @@
 					this.$input.datetimepicker('clear');
 					this.setInputValue(this.getValue());
 				}
+			} else if (inputType == 'select2') {
+				var select2Settings = this.options.typeSettings;
+				if(utils.isArray(select2Settings.dataSource)) {
+					select2Settings = select2Settings.select2;
+				}
+				this.$input.select2(select2Settings);
 			}
 			// create submit and cancel buttons, if enabled
 			if (this.options.buttonsOn === true) {
@@ -2041,6 +2070,9 @@
 			} else {
 				this.$input.val(newValue);
 			}
+			if (this.options.type == 'select2') {
+				this.$input.trigger('change.select2');
+			}
 			return this;
 		};
 
@@ -2138,6 +2170,9 @@
 			} else {
 				// default clear
 				this.$input.val('');
+			}
+			if (this.options.type == 'select2') {
+				this.$input.trigger('change.select2');
 			}
 			return this;
 		};

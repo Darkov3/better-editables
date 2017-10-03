@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.36.72
+Highly Customizable JavaScript Editables v0.37.73
 
 Demo:
 https://darkov3.github.io/
@@ -14,11 +14,9 @@ Improvements:
 - none
 
 Features:
-- add select2 type <- priority
 - add tinyMCE type <- priority
 - add documentation <- priority
 - add more code comments
-- add option to imitate a form submit(send FormData)
 - add options to change button text
 - add animation capabilities on show/hide/value change
 - add trigger display method
