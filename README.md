@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.38.84
+Highly Customizable JavaScript Editables v0.39.14
 
 Demo:
 https://darkov3.github.io/
@@ -11,7 +11,7 @@ Bug Fixes:
 - none
 
 Improvements:
-- make compare function accept editables as values
+- none
 
 Features:
 - add tinyMCE type <- priority

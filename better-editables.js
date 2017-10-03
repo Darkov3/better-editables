@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.38.84";
+		$.betterEditableData.version = "0.39.14";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -56,6 +56,13 @@
 				var strArray = Array.toString();
 
 				return typeof value == "object" && (toString.call(value) == "[object Array]" || ("constructor" in value && String(value.constructor) == strArray));
+			},
+			// checks if value type is object
+			isObject: function (value) {
+				var toString = Object.prototype.toString;
+				var strObject = Object.toString();
+
+				return typeof value == "object" && (toString.call(value) == "[object Object]" || ("constructor" in value && String(value.constructor) == strObject));
 			},
 			// turns any value to a boolean type
 			normalizeBoolean: function (value) {
@@ -861,6 +868,7 @@
 
 				return undefined;
 			}
+			this.isBetterEditable = true;
 			// load settings, or use defaults:
 			this.options = {};
 			this.options.url = setIfDefined([this.$element.data('url'), settings.url]);
@@ -1921,9 +1929,19 @@
 		BetterEditable.prototype.compare = function (value1, value2, type) {
 			if (typeof value1 === 'undefined') {
 				value1 = this.getValue();
+			} else if (utils.isObject(value1) && value1.isBetterEditable === true) {
+				value1 = value1.getValue();
+				if (typeof type === 'undefined') {
+					type = value1.options.type;
+				}
 			}
 			if (typeof value2 === 'undefined') {
 				value2 = this.getInputValue();
+			} else if (utils.isObject(value2) && value2.isBetterEditable === true) {
+				value2 = value2.getValue();
+				if (typeof type === 'undefined') {
+					type = value2.options.type;
+				}
 			}
 			if (typeof type === 'undefined') {
 				type = this.options.type;
