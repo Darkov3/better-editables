@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.39.14";
+		$.betterEditableData.version = "0.40.24";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -806,6 +806,7 @@
 			}
 		};
 
+		$.betterEditableData.dontTriggerTab = function () { return false; };
 		$.betterEditableData.submitting = 0;
 		$.betterEditableData.blockTab = true;
 		$.betterEditableData.asyncRequests = false;
@@ -1842,7 +1843,7 @@
 			return this;
 		};
 
-		BetterEditable.prototype.triggerTabbing = function (tabDirection, $nextEditable) {
+		BetterEditable.prototype.triggerTabbing = function (tabDirection, $nextEditable, originalEvent) {
 			if (!this.canTab()) {
 				return this;
 			}
@@ -1859,13 +1860,14 @@
 					direction: tabDirection,
 					nextTab: nextTab,
 					editable: this,
-					returnData: returnData
+					returnData: returnData,
+					originalEvent: originalEvent
 				});
 				if (returnData.flag !== false) {
 					$nextEditable = $nextEditable.first();
 					// skip tab if the proper conditions are met
 					if ($nextEditable.betterEditable().skipTab()) {
-						$nextEditable.betterEditable().triggerTabbing(tabDirection);
+						$nextEditable.betterEditable().triggerTabbing(tabDirection, undefined, originalEvent);
 					} else {
 						$nextEditable.betterEditable().show(tabDirection);
 					}
@@ -2522,6 +2524,9 @@
 	{
 		$(document).on('keydown', function (event) {
 			if (event.which == 9) {
+				if ($.betterEditableData.dontTriggerTab()) {
+					return;
+				}
 				if ($.betterEditableData.submitting > 0 && $.betterEditableData.blockTab === true) {
 					utils.preventDefault(event);
 				} else if ($.betterEditableData.submitting === 0 && $('[data-editable-div]:visible').length == 0) {
@@ -2530,11 +2535,11 @@
 					if (!event.shiftKey && $firstTabElement.length > 0 && typeof $firstTabElement.betterEditable() === 'object' &&
 						$firstTabElement.betterEditable() !== null && $firstTabElement.betterEditable().options.tabbingOn == true) {
 						utils.preventDefault(event);
-						$firstTabElement.betterEditable().triggerTabbing(1, $firstTabElement);
+						$firstTabElement.betterEditable().triggerTabbing(1, $firstTabElement, event);
 					} else if (event.shiftKey && $lastTabElement.length > 0 && typeof $lastTabElement.betterEditable() === 'object' &&
 						$lastTabElement.betterEditable() !== null && $lastTabElement.betterEditable().options.tabbingOn == true) {
 						utils.preventDefault(event);
-						$lastTabElement.betterEditable().triggerTabbing(-1, $lastTabElement);
+						$lastTabElement.betterEditable().triggerTabbing(-1, $lastTabElement, event);
 					}
 				}
 			}
