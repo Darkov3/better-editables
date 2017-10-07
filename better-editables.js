@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.40.24";
+		$.betterEditableData.version = "0.40.25";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -207,7 +207,10 @@
 				'password',
 				'tel',
 				'email',
-				'textarea'
+				'textarea',
+				'inputmask',
+				'autocomplete',
+				'typeahead'
 			],
 			// these types have no default clear button
 			noClearButtonTypes: [
