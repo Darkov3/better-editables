@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.40.25";
+		$.betterEditableData.version = "0.40.27";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -2008,7 +2008,10 @@
 				// convert value to number type, if type is number
 				newValue = utils.normalizeNumber(newValue);
 			} else if (this.options.type == 'datetimepicker') {
-				// convert value to дате type, if type is datetimepicker
+				// convert value to date type, if type is datetimepicker
+				if (!isNaN(Date.parse(newValue))) {
+					newValue = new Date(newValue);
+				}
 				this.$input.data("DateTimePicker").date(newValue);
 				newValue = this.$input.data("DateTimePicker").date();
 			} else if ($.inArray(this.options.type, utils.textTypes) !== -1) {
