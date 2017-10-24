@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.40.27
+Highly Customizable JavaScript Editables v0.41.57
 
 Demo:
 https://darkov3.github.io/
@@ -11,7 +11,11 @@ Bug Fixes:
 - none
 
 Improvements:
-- none
+- make popup move after error/popup size change
+- add popup reposition function
+- make buttons have tooltip titles (by making them hyperlink elements mb)
+- add selector argument to applyToAll
+- make changing submit on blur not reacting the input
 
 Features:
 - add tinyMCE type <- priority
