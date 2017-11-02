@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.41.57
+Highly Customizable JavaScript Editables v0.41.58
 
 Demo:
 https://darkov3.github.io/
@@ -8,7 +8,8 @@ https://darkov3.github.io/
 TODO:
 
 Bug Fixes:
-- none
+- returns from methods dont return jquery element
+- errors for select2 appear under clear button, maybe for select too
 
 Improvements:
 - make popup move after error/popup size change

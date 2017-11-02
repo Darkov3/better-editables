@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.41.57";
+		$.betterEditableData.version = "0.41.58";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -1551,7 +1551,7 @@
 				}
 			} else if (inputType == 'select2') {
 				var select2Settings = this.options.typeSettings;
-				if(utils.isArray(select2Settings.dataSource)) {
+				if(utils.isObject(select2Settings) && utils.isArray(select2Settings.dataSource)) {
 					select2Settings = select2Settings.select2;
 				}
 				this.$input.select2(select2Settings);
