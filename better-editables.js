@@ -4,7 +4,7 @@
 	// betterEditableData scope
 	{
 		$.betterEditableData = {};
-		$.betterEditableData.version = "0.41.58";
+		$.betterEditableData.version = "0.47.59";
 
 		// utility functions
 		$.betterEditableData.utils = {
@@ -64,8 +64,15 @@
 
 				return typeof value == "object" && (toString.call(value) == "[object Object]" || ("constructor" in value && String(value.constructor) == strObject));
 			},
-			// turns any value to a boolean type
-			normalizeBoolean: function (value) {
+			// turns any value to a boolean type, can be nullable bool
+			normalizeBoolean: function (value, isNullable) {
+				if (isNullable !== true) {
+					isNullable = false;
+				}
+				if (isNullable && value === null) {
+					return value;
+				}
+
 				if (typeof value !== 'boolean') {
 					if (typeof value === 'string' && value.toLowerCase() === 'true') {
 						value = true;
@@ -171,7 +178,8 @@
 				'buttonClass',
 				'type',
 				'mode',
-				'typeSettings'
+				'typeSettings',
+				'clearButtonText'
 			],
 			// these options require the option value to be normalized
 			requireBoolNormalization: [
@@ -344,6 +352,10 @@
 				}
 			},
 			boolDisplay: function (editable, boolValue) {
+				if (editable.options.typeSettings === true && boolValue === null) {
+					return null;
+				}
+
 				if (boolValue) {
 					return "True";
 				} else {
@@ -649,6 +661,9 @@
 				editable.initiateSubmit(undefined, true);
 				return editable.$element;
 			},
+			refreshDisplay: function (editable, value) {
+				editable.options.displayFunction(editable, value);
+			},
 			setOption: function (editable, optionName, optionValue) {
 				if ($.inArray(optionName, utils.requireBoolNormalization) !== -1) {
 					optionValue = utils.normalizeBoolean(optionValue);
@@ -903,7 +918,7 @@
 			this.options.pk = setIfDefined([this.$element.data('pk'), settings.pk]);
 			this.options.toggle = setIfDefined([this.$element.data('toggle'), settings.toggle, 'click']);
 			this.options.mode = setIfDefined([this.$element.data('mode'), settings.mode]);
-			if (this.options.mode !== 'popup') {
+			if (this.options.mode !== 'popup') { // only those two exist currently
 				this.options.mode = 'inline';
 			}
 			this.options.placement = setIfDefined([this.$element.data('placement'), settings.placement, "right"]);
@@ -971,6 +986,7 @@
 				return $.betterEditableData.default.select2Display(editable, value);
 			}]);
 			this.options.clearButton = setIfDefined([this.$element.data('clear-button'), settings.clearButton, true], true);
+			this.options.clearButtonText = setIfDefined([this.$element.data('clear-button-text'), settings.clearButtonText, true]);
 			this.options.viewPassword = setIfDefined([this.$element.data('view-password'), settings.viewPassword, true], true);
 			this.options.buttonsOn = setIfDefined([this.$element.data('buttons-on'), settings.buttonsOn, true], true);
 			this.options.inputClass = setIfDefined([this.$element.data('input-class'), settings.inputClass]);
@@ -1118,6 +1134,8 @@
 				}
 				utils.createHtmlFromData(this.$input, dataSource, 'radio');
 			} else if (inputType == 'bool') {
+				// typeSettings defines if bool can be nullable or not
+				this.options.typeSettings = utils.normalizeBoolean(this.options.typeSettings);
 				this.$input = $('<input></input>').attr('type', 'hidden');
 			} else if (inputType == 'inputmask') {
 				this.$input = $('<input></input>').attr('type', 'text');
@@ -1160,6 +1178,9 @@
 						var fval = this.$element.data("input" + dataIndex + "-value");
 						var flabel = this.$element.data("input" + dataIndex + "-label");
 						var foptions = this.$element.data("input" + dataIndex + "-options");
+						var ficlass = this.$element.data("input" + dataIndex + "-class");
+						var flclass = this.$element.data("input" + dataIndex + "-label-class");
+						var fwclass = this.$element.data("input" + dataIndex + "-wrapper-class");
 						if (typeof fname === 'string') {
 							if (typeof ftype !== 'string') {
 								ftype = "text";
@@ -1170,7 +1191,7 @@
 							if (ftype === 'checkbox'){
 								fval = utils.normalizeBoolean(fval);
 							}
-							dataSource[fname] = [ftype, flabel, fval, foptions];
+							dataSource[fname] = [ftype, flabel, fval, foptions, ficlass, flclass, fwclass];
 							var objToAdd = {};
 							objToAdd[fname] = fval;
 							inputDataSource.push($.extend({}, objToAdd));
@@ -1183,7 +1204,7 @@
 					}
 				}
 				if (typeof dataSource === 'object' && !utils.isArray(dataSource)) {
-					var createField = function(fieldName, fieldLabel, fieldType, fieldValue, fieldOptions) {
+					var createField = function(fieldName, fieldLabel, fieldType, fieldValue, fieldOptions, inputClass, labelClass, wrapperClass) {
 						var $fieldWrapper = $('<div></div>').addClass('editable-multifield-input-wrapper').addClass(fieldType + "-type");
 						var $newField;
 						var $labelElement;
@@ -1210,6 +1231,14 @@
 						if (fieldType === 'checkbox') {
 							$newField.prop('checked', utils.normalizeBoolean(fieldValue));
 							$labelElement = $('<label></label>').addClass('editable-multifield-label').addClass('checkbox-type');
+
+							if (typeof inputClass === 'string' && inputClass.trim() != '') {
+								$newField.addClass(inputClass);
+							}
+							if (typeof labelClass === 'string' && labelClass.trim() != '') {
+								$labelElement.addClass(labelClass);
+							}
+
 							$labelElement.append($newField).append(fieldLabel);
 							$fieldWrapper.append($labelElement);
 						} else {
@@ -1222,8 +1251,20 @@
 							if (typeof fieldLabel === 'string' && fieldLabel.trim() !== '' && fieldType !== 'hidden') {
 								$labelElement.text(fieldLabel);
 							}
+
+							if (typeof inputClass === 'string' && inputClass.trim() != '') {
+								$newField.addClass(inputClass);
+							}
+							if (typeof labelClass === 'string' && labelClass.trim() != '') {
+								$labelElement.addClass(labelClass);
+							}
+
 							$fieldWrapper.append($labelElement);
 							$fieldWrapper.append($newField);
+						}
+
+						if (typeof wrapperClass === 'string' && wrapperClass.trim() != '') {
+							$fieldWrapper.addClass(wrapperClass);
 						}
 						self.$input.append($fieldWrapper);
 					}
@@ -1234,6 +1275,9 @@
 							var fieldType = dataSource[name];
 							var fieldValue = undefined;
 							var fieldOptions = undefined;
+							var inputClass = undefined;
+							var labelClass = undefined;
+							var wrapperClass = undefined;
 							if (utils.isArray(fieldType)) {
 								if (fieldType.length === 0) {
 									throw "Empty array given as field type!";
@@ -1252,14 +1296,30 @@
 									if (fieldType.length > 3) {
 										fieldOptions = fieldType[3];
 									}
+									if (fieldType.length > 4) {
+										inputClass = fieldType[4];
+									}
+									if (fieldType.length > 5) {
+										labelClass = fieldType[5];
+									}
+									if (fieldType.length > 6) {
+										wrapperClass = fieldType[6];
+									}
 									fieldType = fieldType[0];
 								}
 							} else {
 								fieldLabel += ": ";
 							}
-							createField(fieldName, fieldLabel, fieldType, fieldValue, fieldOptions);
+							createField(fieldName, fieldLabel, fieldType, fieldValue, fieldOptions, inputClass, labelClass, wrapperClass);
 						} else {
-							createField(name, dataSource[name].label, dataSource[name].type, dataSource[name].value, dataSource[name].options);
+							createField(name, 
+								dataSource[name].label, 
+								dataSource[name].type, 
+								dataSource[name].value, 
+								dataSource[name].options, 
+								dataSource[name].inputClass, 
+								dataSource[name].labelClass, 
+								dataSource[name].wrapperClass);
 						}
 					});
 				}
@@ -1304,8 +1364,13 @@
 			//bool type has no key events, but has click event
 			if (this.options.type === 'bool') {
 				this.$input.on('click', function () {
+					var currentValue = self.getValue();
+					// accommodate for nullable bool
+					if (currentValue === null) {
+						currentValue = false;
+					}
 					// inverse the bool value
-					self.setInputValue(!self.getValue());
+					self.setInputValue(!currentValue);
 					self.initiateSubmit();
 				});
 			} else {
@@ -1374,7 +1439,7 @@
 					});
 					if ($inputArray.length > 0) {
 						var $lastTabElement = $($inputArray.pop());
-						if ($inputArray.length > 1) {
+						if ($inputArray.length >= 1) {
 							var $firstTabElement = $($inputArray.shift());
 							// if type is multifield, then every input(thats not hidden) can submit with Enter and cancel with ESC
 							$.each($inputArray, function (index, element) {
@@ -1476,11 +1541,15 @@
 				(ieVersion === 0 || inputType == 'textarea' || inputType == 'password')) {
 				var $clearButton = $("<button></button>").addClass('editable-input-button').addClass('editable-clear-button');
 				// special clear buttons
+				var clearButtonText = '✖';
 				if (inputType == 'multifield' || inputType == 'select' || inputType == 'select2' || inputType == 'radio') {
-					$clearButton.text('Clear').addClass('editable-button');
-				} else {
-					$clearButton.text('✖');
+					clearButtonText = 'Clear';
+					$clearButton.addClass('editable-button');
 				}
+				if (typeof this.options.clearButtonText === 'string') {
+					clearButtonText = this.options.clearButtonText;
+				}
+				$clearButton.html(clearButtonText);
 				$clearButton.on('click', function () {
 					self.clearInputValue();
 					self.focus();
@@ -2021,9 +2090,9 @@
 	// Getters, setters, toggle, reset scope
 	{
 		BetterEditable.prototype.setValue = function (newValue) {
-			// convert value to boolean type, if type is bool
+			// convert value to boolean type, if type is bool and accommodate nullable possibility for bool
 			if (this.options.type == 'bool') {
-				newValue = utils.normalizeBoolean(newValue);
+				newValue = utils.normalizeBoolean(newValue, this.options.typeSettings);
 			} else if (this.options.type == 'number') {
 				// convert value to number type, if type is number
 				newValue = utils.normalizeNumber(newValue);
@@ -2129,7 +2198,7 @@
 		BetterEditable.prototype.getInputValue = function () {
 			var returnValue = this.$input.val();
 			if (this.options.type == 'bool') {
-				returnValue = utils.normalizeBoolean(returnValue);
+				returnValue = utils.normalizeBoolean(returnValue, this.options.typeSettings);
 			} else if (this.options.type == 'number') {
 				// convert value to number type, if type is number
 				returnValue = utils.normalizeNumber(returnValue);

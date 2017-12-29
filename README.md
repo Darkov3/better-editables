@@ -1,5 +1,5 @@
 # Better Editables
-Highly Customizable JavaScript Editables v0.41.58
+Highly Customizable JavaScript Editables v0.47.59
 
 Demo:
 https://darkov3.github.io/
@@ -12,6 +12,7 @@ Bug Fixes:
 - errors for select2 appear under clear button, maybe for select too
 
 Improvements:
+- make multifield value an object, instead of an array of objects
 - make popup move after error/popup size change
 - add popup reposition function
 - make buttons have tooltip titles (by making them hyperlink elements mb)
